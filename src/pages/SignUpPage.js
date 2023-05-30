@@ -1,19 +1,70 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { fade } from "../styles/keyframes.js";
+import { useState } from "react";
+import apiAuth from "../services/apiAuth.js";
 
-export default function SignInPage() {
+export default function SignUpPage() {
+  const [form, setForm] = useState({ name: "", email: "", password: "", avatar: "" });
+  const navigate = useNavigate();
+
+  function handleForm(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
+
+  function handleSignUp(e) {
+    e.preventDefault();
+
+    if (!form.name || !form.email || !form.password || !form.avatar) return alert("All fields must be filled");
+
+    apiAuth.signUp(form)
+      .then(res => {
+        navigate("/");
+      })
+      .catch(err => {
+        alert(err.response.data);
+      });
+  }
+
   return (<SignInPageContainer>
     <TitleContainer>
       <Title>linkr</Title>
       <SubTitle>save, share and discover<br /> the best links on the web</SubTitle>
     </TitleContainer>
-    <FormContainer>
-      <Input placeholder={"e-mail"} />
-      <Input placeholder={"password"} />
-      <Input placeholder={"username"} />
-      <Input placeholder={"picture url"} />
-      <Button>Sign Up</Button>
+    <FormContainer onSubmit={handleSignUp}>
+      <Input
+        placeholder={"e-mail"}
+        name="email"
+        type="email"
+        required
+        value={form.email}
+        onChange={handleForm}
+      />
+      <Input
+        placeholder={"password"}
+        name="password"
+        type="text"
+        required
+        value={form.password}
+        onChange={handleForm}
+      />
+      <Input
+        placeholder={"username"}
+        name="name"
+        type="text"
+        required
+        value={form.name}
+        onChange={handleForm}
+      />
+      <Input
+        placeholder={"picture url"}
+        name="avatar"
+        type="text"
+        required
+        value={form.avatar}
+        onChange={handleForm}
+      />
+      <Button type="submit">Sign Up</Button>
       <Link to={'/'}> Switch back to log in</Link>
     </FormContainer>
   </SignInPageContainer>
