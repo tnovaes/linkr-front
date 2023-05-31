@@ -25,6 +25,8 @@ export default function SignUpPage() {
       })
       .catch(err => {
         alert(err.response.data);
+        setForm({ name: "", email: "", password: "", avatar: "" });
+        setDisabled(false);
       });
   }
 
