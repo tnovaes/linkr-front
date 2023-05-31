@@ -43,7 +43,7 @@ export default function SignUpPage() {
       <Input
         placeholder={"password"}
         name="password"
-        type="text"
+        type="password"
         required
         value={form.password}
         onChange={handleForm}
