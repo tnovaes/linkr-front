@@ -1,17 +1,73 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { fade } from "../styles/keyframes.js";
+import { useEffect, useState } from "react";
+import apiAuth from "../services/apiAuth.js";
 
 export default function SignInPage() {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [disabled, setDisabled] = useState(false)
+  const navigate = useNavigate();
+  function handleForm(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
+  async function handleSignIn(e) {
+    e.preventDefault();
+    setDisabled(() => true)
+    if (!form.email || !form.password) return alert("All fields must be filled");
+    try {
+      const response = await apiAuth.signIn(form)
+      if (response.status === 200) {
+        const { token } = await response.data
+        localStorage.setItem("token", `Bearer ${token}`)
+        navigate('/timeline')
+      }
+    } catch (error) {
+      if (error.response.status === 401) alert("Incorrect email or password, please try again.")
+    } finally {
+      setForm(() => ({ email: "", password: "" }))
+      setDisabled(() => false)
+    }
+  }
+  useEffect(() => {
+    (async function getUserInfo() {
+      try {
+        const token = localStorage.getItem("token")
+        if (token !== null) {
+          //podemos também setar um estado aqui
+          // falando que a conta foi detectada com um loading ao lado ao invés de mostrar a página de signin
+          // const data = await requisicao_pra_buscar_dados_da_timeline()
+          //setar dados do usuario/timeline
+          navigate("/timeline")
+        }
+      } catch (e) {
+
+      }
+    })()
+  }, [])
   return (<SignInPageContainer>
     <TitleContainer>
       <Title>linkr</Title>
       <SubTitle>save, share and discover<br /> the best links on the web</SubTitle>
     </TitleContainer>
-    <FormContainer>
-      <Input placeholder={"e-mail"} />
-      <Input placeholder={"password"} />
-      <Button>Log In</Button>
+    <FormContainer onSubmit={handleSignIn}>
+      <Input
+        placeholder={"e-mail"}
+        name="email"
+        type="email"
+        required
+        value={form.email}
+        onChange={handleForm}
+      />
+      <Input
+        placeholder={"password"}
+        name="password"
+        type="password"
+        required
+        value={form.password}
+        onChange={handleForm}
+      />
+      <Button disabled={disabled}>Log In</Button>
       <Link to={'/signup'}> First time? Create and account! </Link>
     </FormContainer>
   </SignInPageContainer>
