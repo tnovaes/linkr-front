@@ -8,7 +8,10 @@ function signUp(body) {
 function signIn(body) {
     return axios.post(`${BASE_URL}/signin`, body);
 }
+function logout(token) {
+    return axios.post(`${BASE_URL}/logout`, {}, { headers: { Authorization: token} });
+}
 
-const apiAuth = { signUp, signIn };
+const apiAuth = { signUp, signIn, logout };
 
 export default apiAuth;

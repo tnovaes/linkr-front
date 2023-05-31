@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { fade } from "../styles/keyframes.js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import apiAuth from "../services/apiAuth.js";
 
 export default function SignInPage() {
@@ -23,12 +23,28 @@ export default function SignInPage() {
         navigate('/timeline')
       }
     } catch (error) {
-      if (error.response.status === 401) alert("Incorrect email or password, please try again.") 
+      if (error.response.status === 401) alert("Incorrect email or password, please try again.")
     } finally {
       setForm(() => ({ email: "", password: "" }))
       setDisabled(() => false)
     }
   }
+  useEffect(() => {
+    (async function getUserInfo() {
+      try {
+        const token = localStorage.getItem("token")
+        if (token !== null) {
+          //podemos também setar um estado aqui
+          // falando que a conta foi detectada com um loading ao lado ao invés de mostrar a página de signin
+          // const data = await requisicao_pra_buscar_dados_da_timeline()
+          //setar dados do usuario/timeline
+          navigate("/timeline")
+        }
+      } catch (e) {
+
+      }
+    })()
+  }, [])
   return (<SignInPageContainer>
     <TitleContainer>
       <Title>linkr</Title>
