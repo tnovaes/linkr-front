@@ -4,8 +4,8 @@ export function Arrow({ arrowDirection = true, onClick }) {
     return (
         <Button onClick={onClick}>
             <ArrowSVG width="23" height="17" viewBox="0 0 23 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {arrowDirection ? <path d="M2.32315 14.7658L11.4893 2.375L20.6981 14.7341" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-                :<path d="M20.6875 2.375L11.5 14.75L2.3125 2.375" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                {arrowDirection ? <path d="M2.32315 14.7658L11.4893 2.375L20.6981 14.7341" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                :<path d="M20.6875 2.375L11.5 14.75L2.3125 2.375" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
             }
             </ArrowSVG>
         </Button>
