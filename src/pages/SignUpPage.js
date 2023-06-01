@@ -6,6 +6,7 @@ import apiAuth from "../services/apiAuth.js";
 
 export default function SignUpPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "", avatar: "" });
+  const [disabled, setDisabled] = useState(false);
   const navigate = useNavigate();
 
   function handleForm(e) {
@@ -14,6 +15,7 @@ export default function SignUpPage() {
 
   function handleSignUp(e) {
     e.preventDefault();
+    setDisabled(true);
 
     if (!form.name || !form.email || !form.password || !form.avatar) return alert("All fields must be filled");
 
@@ -23,10 +25,12 @@ export default function SignUpPage() {
       })
       .catch(err => {
         alert(err.response.data);
+        setForm({ name: "", email: "", password: "", avatar: "" });
+        setDisabled(false);
       });
   }
 
-  return (<SignInPageContainer>
+  return (<SignUpPageContainer>
     <TitleContainer>
       <Title>linkr</Title>
       <SubTitle>save, share and discover<br /> the best links on the web</SubTitle>
@@ -64,10 +68,12 @@ export default function SignUpPage() {
         value={form.avatar}
         onChange={handleForm}
       />
-      <Button type="submit">Sign Up</Button>
+      <Button type="submit" disabled={disabled}>
+        Sign Up
+      </Button>
       <Link to={'/'}> Switch back to log in</Link>
     </FormContainer>
-  </SignInPageContainer>
+  </SignUpPageContainer>
   );
 }
 
@@ -106,7 +112,7 @@ width:fit-content;
   }
 }
 `
-const SignInPageContainer = styled.div`
+const SignUpPageContainer = styled.div`
 display:flex;
 width:100%;
 height:100%;
@@ -186,6 +192,10 @@ padding-left:17px;
 }
 `
 const Button = styled.button`
+display: flex;
+align-items: center;
+justify-content: center;
+text-align: center;
 font-family: 'Oswald';
 font-weight: 700;
 font-size: 27px;
