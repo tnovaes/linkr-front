@@ -5,7 +5,9 @@ import { Arrow } from "./Arrow.js";
 import { fadeGrow } from "../styles/keyframes.js";
 import { useNavigate } from "react-router";
 import apiAuth from "../services/apiAuth.js";
+import { DebounceInput } from 'react-debounce-input';
 export function Header({ children, profileImg }) {
+    const [usersList, setUsersList] = useState([])
     const [arrowDirection, setArrowDirection] = useState(false)
     const [showMenu, setShowMenu] = useState(false)
     const navigate = useNavigate()
@@ -24,6 +26,19 @@ export function Header({ children, profileImg }) {
             navigate("/")
         }
     }
+    async function handleSearchInput(e) {
+        try {
+            const token = localStorage.getItem("token")
+            const response = await apiAuth.getUsers(token, e.target.value)
+            if (response.status === 200) {
+                setUsersList(prev => response.data)
+            }
+        } catch (err) {
+        }
+    }
+    function handleUserProfileNavigation(id){
+        navigate(`/user/${id}`)
+    }
     //DESCOMENTAR DEPOIS DE COLOCAR NA PAGINA QUE PRECISA DE AUTHENTICAÇÃO
     //COLOQUEI AQUI PRA ELE REDIRECIONAR PARA A HOME CASO NÃO ESTEJA AUTENTICADO
     //não precisa ter necessáriamente aqui, seria mais por  reaproveitamento entre as paginas que precisam de authenticação
@@ -35,6 +50,24 @@ export function Header({ children, profileImg }) {
     return (<>
         <HeaderContainer>
             <Logo>linkr</Logo>
+            <SearchPersonContainer>
+                <DebounceInput
+                    element={SearchPersonInput}
+                    minLength={3}
+                    debounceTimeout={300}
+                    onChange={(e) => handleSearchInput(e)}
+                    onBlur={()=>setUsersList(()=>[])}
+                    placeholder="Search for people"
+                />
+                <UserListContainer>
+                    {usersList.map(item =>
+                        <UserListItem onClick={()=>handleUserProfileNavigation(item.id)} key={item.id}>
+                            <ProfileImage width={'39px'} height={'39px'}profileImgUrl={item.avatar}/>
+                            <p>{item.name}</p>
+                        </UserListItem>
+                    )}
+                </UserListContainer>
+            </SearchPersonContainer>
             <NavContainer>
                 <Arrow onClick={handleMenu} arrowDirection={arrowDirection} />
                 <ProfileImage onClick={handleMenu} profileImg={profileImg} width="53px" height="53px" />
@@ -44,6 +77,86 @@ export function Header({ children, profileImg }) {
         {children}
     </>)
 }
+
+const UserListContainer = styled.ul`
+height:fit-content;
+display: flex;
+flex-direction:column;
+p{
+    margin-left:12px;
+    font-family: 'Lato';
+    font-weight: 400;
+    font-size: 19px;
+    line-height: 23px;
+    text-transform: capitalize;
+}
+`
+const UserListItem = styled.li`
+display: flex;
+cursor:pointer;
+align-items:center;
+margin-bottom: 16px;
+margin-left: 16px;
+:first-child{
+    margin-top: 14px;
+}
+:last-child{
+    margin-bottom: 23px;
+}
+`
+
+
+const SearchPersonContainer = styled.div`
+position:fixed;
+top:13px;
+left: calc(50% - 285px);
+max-width:570px;
+background-color:#E7E7E7;
+border-radius: 8px;
+display: flex;
+flex-direction: column;
+input{
+    /* position:absolute;
+    top:0;
+    left:0; */
+}
+
+:focus {
+    
+}
+
+/* input {
+    width:100%;
+    height:45px;
+    padding-left:17px;
+    font-family: 'Lato';
+    font-weight: 400;
+    font-size: 19px;
+    line-height: 23px;
+    color:black;
+    border-radius: 8px;
+::placeholder{
+    color:#C6C6C6;
+}
+} */
+`
+const SearchPersonInput = styled.input`
+width:100%;
+height:45px;
+padding-left:17px;
+font-family: 'Lato';
+font-weight: 400;
+font-size: 19px;
+line-height: 23px;
+color:black;
+border-radius: 8px;
+::placeholder{
+    color:#C6C6C6;
+}
+`
+
+
+
 const MenuButton = styled.button`
 position:absolute;
 top:62px;
