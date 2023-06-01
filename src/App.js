@@ -3,6 +3,7 @@ import SignInPage from "./pages/SignInPage.js";
 import SignUpPage from "./pages/SignUpPage.js";
 import { Header } from "./components/Header.js";
 import TimelinePage from "./pages/TimelinePage.js";
+import UserPage from "./pages/UserPage.js";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <Route path="/" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/timeline" element={<Header><TimelinePage /></Header>} />
+        <Route path="/user/:id" element={<Header><UserPage /></Header>} />
         {/* demo de como usar o header, só por em volta do componente da página, podem apagar depois */}
         <Route path="/demoheader" element={<Header><SignUpPage /></Header>} />
       </Routes>
