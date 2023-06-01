@@ -1,16 +1,18 @@
 import styled from "styled-components";
 import { ProfileImage } from "./ProfileImage.js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Arrow } from "./Arrow.js";
 import { fadeGrow } from "../styles/keyframes.js";
 import { useNavigate } from "react-router";
 import apiAuth from "../services/apiAuth.js";
 import { DebounceInput } from 'react-debounce-input';
 export function Header({ children, profileImg }) {
+    const [searchInputValue, setSearchInputValue] = useState("")
     const [usersList, setUsersList] = useState([])
     const [arrowDirection, setArrowDirection] = useState(false)
     const [showMenu, setShowMenu] = useState(false)
     const navigate = useNavigate()
+    const searchContainerRef = useRef()
     function handleMenu() {
         setArrowDirection((prev) => !prev)
         setShowMenu((prev) => !prev)
@@ -28,6 +30,8 @@ export function Header({ children, profileImg }) {
     }
     async function handleSearchInput(e) {
         try {
+            setSearchInputValue(() => e.target.value)
+            if (e.target.value.length < 3) return;
             const token = localStorage.getItem("token")
             const response = await apiAuth.getUsers(token, e.target.value)
             if (response.status === 200) {
@@ -36,9 +40,28 @@ export function Header({ children, profileImg }) {
         } catch (err) {
         }
     }
-    function handleUserProfileNavigation(id){
-        navigate(`/user/${id}`)
+    function handleUserProfileNavigation(e) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (e.target.id==='input') return
+        navigate(`/user/${e.target.id}`)
     }
+    
+    function cleanInput(e) {
+        setUsersList(() => [])
+    }
+    useEffect(() => {
+        const searchContainer = searchContainerRef.current;
+        searchContainer.addEventListener('click', handleUserProfileNavigation,  { capture: true });
+        document.addEventListener('click', cleanInput);
+        return () => {
+            searchContainer.removeEventListener('click', handleUserProfileNavigation, { capture: true });
+            document.removeEventListener('click', cleanInput);
+        };
+    }, []);
+    // useEffect(() => {
+    // }, []);
+    // onClick={}
     //DESCOMENTAR DEPOIS DE COLOCAR NA PAGINA QUE PRECISA DE AUTHENTICAÇÃO
     //COLOQUEI AQUI PRA ELE REDIRECIONAR PARA A HOME CASO NÃO ESTEJA AUTENTICADO
     //não precisa ter necessáriamente aqui, seria mais por  reaproveitamento entre as paginas que precisam de authenticação
@@ -50,20 +73,22 @@ export function Header({ children, profileImg }) {
     return (<>
         <HeaderContainer>
             <Logo>linkr</Logo>
-            <SearchPersonContainer>
+            <SearchPersonContainer ref={searchContainerRef}>
                 <DebounceInput
                     element={SearchPersonInput}
+                    id={"input"}
                     minLength={3}
                     debounceTimeout={300}
                     onChange={(e) => handleSearchInput(e)}
-                    onBlur={()=>setUsersList(()=>[])}
+                    onFocus={(e) => handleSearchInput(e)}
                     placeholder="Search for people"
+                    value={searchInputValue}
                 />
-                <UserListContainer>
+                <UserListContainer >
                     {usersList.map(item =>
-                        <UserListItem onClick={()=>handleUserProfileNavigation(item.id)} key={item.id}>
-                            <ProfileImage width={'39px'} height={'39px'}profileImgUrl={item.avatar}/>
-                            <p>{item.name}</p>
+                        <UserListItem id={item.id} key={item.id}>
+                            <ProfileImage id={item.id} width={'39px'} height={'39px'} profileImgUrl={item.avatar} />
+                            <p id={item.id}>{item.name}</p>
                         </UserListItem>
                     )}
                 </UserListContainer>
@@ -82,6 +107,23 @@ const UserListContainer = styled.ul`
 height:fit-content;
 display: flex;
 flex-direction:column;
+overflow-y:auto;
+overflow-x:hidden;
+cursor:pointer;
+::-webkit-scrollbar {
+  width: 8px; 
+}
+::-webkit-scrollbar-thumb {
+  background-color: black; 
+  border-radius: 5px; 
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #1877f2; 
+}
+::-webkit-scrollbar-track {
+  background-color: #f1f1f1; 
+}
+
 p{
     margin-left:12px;
     font-family: 'Lato';
@@ -90,19 +132,31 @@ p{
     line-height: 23px;
     text-transform: capitalize;
 }
+li:hover{
+    transition: all 0.3s ease-in-out;
+    color:#1877f2;
+    transform:scale(1.2) translateX(40px);
+    cursor:pointer;
+    img {
+        transition: all 0.3s ease-in-out;
+        outline:2px solid white;
+    }
+}
 `
+
 const UserListItem = styled.li`
 display: flex;
-cursor:pointer;
 align-items:center;
 margin-bottom: 16px;
 margin-left: 16px;
+animation: ${fadeGrow} 0.1s ease-in forwards;
 :first-child{
     margin-top: 14px;
 }
 :last-child{
     margin-bottom: 23px;
 }
+
 `
 
 
@@ -115,34 +169,19 @@ background-color:#E7E7E7;
 border-radius: 8px;
 display: flex;
 flex-direction: column;
+max-height:60%;
+overflow-y:hidden;
 input{
-    /* position:absolute;
-    top:0;
-    left:0; */
+    height:45px;
 }
 
 :focus {
     
 }
 
-/* input {
-    width:100%;
-    height:45px;
-    padding-left:17px;
-    font-family: 'Lato';
-    font-weight: 400;
-    font-size: 19px;
-    line-height: 23px;
-    color:black;
-    border-radius: 8px;
-::placeholder{
-    color:#C6C6C6;
-}
-} */
 `
 const SearchPersonInput = styled.input`
 width:100%;
-height:45px;
 padding-left:17px;
 font-family: 'Lato';
 font-weight: 400;
@@ -150,6 +189,9 @@ font-size: 19px;
 line-height: 23px;
 color:black;
 border-radius: 8px;
+height:45px;
+padding-bottom:13px;
+padding-top:9px;
 ::placeholder{
     color:#C6C6C6;
 }
@@ -175,6 +217,7 @@ transition: all 0.150s linear;
 }
 `
 const HeaderContainer = styled.header`
+z-index:100;
 background-color:#151515;
 height: 72px;
 display:flex;
