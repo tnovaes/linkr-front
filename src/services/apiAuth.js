@@ -9,9 +9,12 @@ function signIn(body) {
     return axios.post(`${BASE_URL}/signin`, body);
 }
 function logout(token) {
-    return axios.post(`${BASE_URL}/logout`, {}, { headers: { Authorization: token} });
+    return axios.post(`${BASE_URL}/logout`, { headers: { Authorization: token } });
+}
+function getUsers(token, searchText) {
+    return axios.post(`${BASE_URL}/users`, {searchText},{ headers: { Authorization: token } });
 }
 
-const apiAuth = { signUp, signIn, logout };
+const apiAuth = { signUp, signIn, logout, getUsers };
 
 export default apiAuth;
