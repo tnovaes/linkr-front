@@ -1,22 +1,25 @@
 import styled from "styled-components";
 import { ProfileImage } from "../components/ProfileImage.js";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import apiPosts from "../services/apiPosts.js";
 import { useEffect, useState } from "react";
 
 export default function TimelinePage() {
     const [feed, setFeed] = useState([]);
+    const [form, setForm] = useState({ shared_link: "", description: "" });
+    const [disabled, setDisabled] = useState(false);
+    const [reload, setReload] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         (async () => {
             try {
-                const token = localStorage.getItem("token")
-                console.log(token);
-                if (!token) return navigate("/")
+                const token = localStorage.getItem("token");
+                if (!token) return navigate("/");
+
                 const timeline = await apiPosts.getTimeline(token);
                 if (timeline.status === 204) {
-                    setFeed([]);
+                    alert("There are no posts yet");
                 } else {
                     setFeed(timeline.data);
                 }
@@ -26,7 +29,32 @@ export default function TimelinePage() {
                 alert("An error occured while trying to fetch the posts, please refresh the page");
             }
         })()
-    }, [])
+    }, [reload])
+
+    function handleForm(e) {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    function handlePost(e) {
+        e.preventDefault();
+        setDisabled(true);
+
+        if (!form.shared_link) return alert("Link input must be filled");
+
+        const token = localStorage.getItem("token");
+
+        apiPosts.publishPost(form, token)
+            .then(res => {
+                setForm({ shared_link: "", description: "" });
+                setDisabled(false);
+                setReload(!reload);
+            })
+            .catch(err => {
+                alert("There was an error publishing your link")
+                console.log(err.response.data);
+                setDisabled(false);
+            });
+    }
 
     return (
         <TimelinePageContainer>
@@ -34,30 +62,43 @@ export default function TimelinePage() {
                 <Title>timeline</Title>
                 <SharePostContainer>
                     <ProfileImage width="50px" height="50px" />
-                    <PostInfo>
+                    <PostForm onSubmit={handlePost}>
                         <CTA>What are you going to share today?</CTA>
-                        <LinkInput placeholder="http://..."></LinkInput>
-                        <DescriptionInput placeholder="Awesome link about your #passion"></DescriptionInput>
-                        <Button>Publish</Button>
-                    </PostInfo>
+                        <LinkInput
+                            placeholder="http://..."
+                            name="shared_link"
+                            type="url"
+                            required
+                            value={form.shared_link}
+                            onChange={handleForm}
+                            disabled={disabled}
+                        ></LinkInput>
+                        <DescriptionInput
+                            placeholder="Awesome link about your #passion"
+                            name="description"
+                            type="text"
+                            value={form.description}
+                            onChange={handleForm}
+                            disabled={disabled}
+                        ></DescriptionInput>
+                        <Button type="submit" disabled={disabled}>{disabled ? "Publishing..." : "Publish"}</Button>
+                    </PostForm>
                 </SharePostContainer>
-                {feed.length === 0 ? <NoFeed>There are no posts yet</NoFeed> :
+                {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
                     feed.map((f) =>
                         <PostContainer>
                             <ProfileImage profileImgUrl={f.avatar} width="50px" height="50px" />
                             <PostInfo>
                                 <Username>{f.name}</Username>
                                 <PostDescription>{f.description}</PostDescription>
-                                <Link to={f.shared_link}>
-                                    <Metadata>
-                                        <LinkInfo>
-                                            <LinkTitle>{f.link_title}</LinkTitle>
-                                            <LinkDescription>{f.link_description}</LinkDescription>
-                                            <LinkURL>{f.shared_link}</LinkURL>
-                                        </LinkInfo>
-                                        <LinkImage src={f.link_image}></LinkImage>
-                                    </Metadata>
-                                </Link>
+                                <Metadata href={f.shared_link} target="_blank">
+                                    <LinkInfo>
+                                        <LinkTitle>{f.link_title}</LinkTitle>
+                                        <LinkDescription>{f.link_description}</LinkDescription>
+                                        <LinkURL>{f.shared_link}</LinkURL>
+                                    </LinkInfo>
+                                    <LinkImage src={f.link_image}></LinkImage>
+                                </Metadata>
                             </PostInfo>
                         </PostContainer>
                     )
@@ -106,6 +147,13 @@ const SharePostContainer = styled.div`
     margin-bottom: 29px;
     padding: 16px;
     gap: 18px;
+`
+
+const PostForm = styled.form`
+    display:flex;
+    flex-direction: column;
+    max-width: 502px;
+    gap:7px;
 `
 
 const PostInfo = styled.div`
@@ -199,13 +247,14 @@ const PostDescription = styled.p`
     text-align: left;
 `
 
-const Metadata = styled.div`
+const Metadata = styled.a`
     display: flex;
     justify-content: space-between;
     width: 100%;
     height: 155px;
     border: 1px solid #4D4D4D;
     border-radius: 11px;
+    text-decoration: none;
 `
 
 const LinkInfo = styled.div`
@@ -248,6 +297,7 @@ const LinkURL = styled.p`
 const LinkImage = styled.img`
     max-width: 153px;
     max-height: 155px;
+    object-fit: cover;
 `
 
 const NoFeed = styled.div`
