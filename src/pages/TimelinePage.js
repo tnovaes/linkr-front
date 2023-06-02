@@ -3,14 +3,15 @@ import { ProfileImage } from "../components/ProfileImage.js";
 import { useNavigate } from "react-router-dom";
 import apiPosts from "../services/apiPosts.js";
 import { useEffect, useState } from "react";
+import { usePhoto } from "../hooks/useImage.js";
 
-export default function TimelinePage({userProfileImage}) {
+export default function TimelinePage() {
     const [feed, setFeed] = useState([]);
     const [form, setForm] = useState({ shared_link: "", description: "" });
     const [disabled, setDisabled] = useState(false);
     const [reload, setReload] = useState(false);
     const navigate = useNavigate();
-
+    const { userProfileImage } = usePhoto()
     useEffect(() => {
         (async () => {
             try {
