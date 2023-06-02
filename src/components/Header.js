@@ -6,7 +6,7 @@ import { fadeGrow } from "../styles/keyframes.js";
 import { useNavigate } from "react-router";
 import apiAuth from "../services/apiAuth.js";
 import { DebounceInput } from 'react-debounce-input';
-export function Header({ children, profileImg }) {
+export function Header({ children, userProfileImage, setUserProfileImage }) {
     const [searchInputValue, setSearchInputValue] = useState("")
     const [usersList, setUsersList] = useState([])
     const [arrowDirection, setArrowDirection] = useState(false)
@@ -43,33 +43,39 @@ export function Header({ children, profileImg }) {
     function handleUserProfileNavigation(e) {
         e.preventDefault()
         e.stopPropagation()
-        if (e.target.id==='input') return
+        if (e.target.id === 'input') return
         navigate(`/user/${e.target.id}`)
     }
-    
+
     function cleanInput(e) {
         setUsersList(() => [])
     }
     useEffect(() => {
         const searchContainer = searchContainerRef.current;
-        searchContainer.addEventListener('click', handleUserProfileNavigation,  { capture: true });
+        searchContainer.addEventListener('click', handleUserProfileNavigation, { capture: true });
         document.addEventListener('click', cleanInput);
         return () => {
             searchContainer.removeEventListener('click', handleUserProfileNavigation, { capture: true });
             document.removeEventListener('click', cleanInput);
         };
     }, []);
-    // useEffect(() => {
-    // }, []);
-    // onClick={}
-    //DESCOMENTAR DEPOIS DE COLOCAR NA PAGINA QUE PRECISA DE AUTHENTICAÇÃO
-    //COLOQUEI AQUI PRA ELE REDIRECIONAR PARA A HOME CASO NÃO ESTEJA AUTENTICADO
-    //não precisa ter necessáriamente aqui, seria mais por  reaproveitamento entre as paginas que precisam de authenticação
-    //mas pode tirar se tiver com problemas pra usar
-    // useEffect(()=>{
-    //     const token = localStorage.getItem("token")
-    //     if (token===null) navigate('/')
-    // }, [])
+
+    useEffect(() => {
+        (async () => {
+            const token = localStorage.getItem("token")
+            if (token === null) {
+                setUserProfileImage("")
+                return navigate('/')
+            }
+            const photoUrl = await apiAuth.getUserPhoto(token)
+            console.log(photoUrl.data)
+            if (photoUrl.status === 200) {
+                const avatarUrl = photoUrl.data.avatar
+                setUserProfileImage(() => avatarUrl)
+            }
+        })()
+
+    }, [])
     return (<>
         <HeaderContainer>
             <Logo>linkr</Logo>
@@ -83,11 +89,12 @@ export function Header({ children, profileImg }) {
                     onFocus={(e) => handleSearchInput(e)}
                     placeholder="Search for people"
                     value={searchInputValue}
+                    autoComplete="off"
                 />
                 <UserListContainer >
                     {usersList.map(item =>
                         <UserListItem id={item.id} key={item.id}>
-                            <ProfileImage id={item.id} width={'39px'} height={'39px'} profileImgUrl={item.avatar} />
+                            <ProfileImage id={item.id} width={'39px'} height={'39px'} userProfileImageUrl={item.avatar} />
                             <p id={item.id}>{item.name}</p>
                         </UserListItem>
                     )}
@@ -95,7 +102,7 @@ export function Header({ children, profileImg }) {
             </SearchPersonContainer>
             <NavContainer>
                 <Arrow onClick={handleMenu} arrowDirection={arrowDirection} />
-                <ProfileImage onClick={handleMenu} profileImg={profileImg} width="53px" height="53px" />
+                <ProfileImage onClick={handleMenu} userProfileImage={userProfileImage} width="53px" height="53px" />
                 {showMenu && <MenuButton onClick={handleLogout}>Logout</MenuButton>}
             </NavContainer>
         </HeaderContainer>
@@ -171,6 +178,10 @@ display: flex;
 flex-direction: column;
 max-height:60%;
 overflow-y:hidden;
+@media (max-width:1000px){
+    background-color:black;
+    width:20px;
+}
 input{
     height:45px;
 }

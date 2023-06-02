@@ -10,6 +10,9 @@ function publishPost(body, token){
     return axios.post(`${BASE_URL}/post`, body, { headers: { Authorization: token } })
 }
 
-const apiPosts = { getTimeline, publishPost };
+function getPostsByUserID(token, id) {
+    return axios.get(`${BASE_URL}/posts/users/${id}`, { headers: { Authorization: token } });
+}
+const apiPosts = { getTimeline, publishPost, getPostsByUserID };
 
 export default apiPosts;
