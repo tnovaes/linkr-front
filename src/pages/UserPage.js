@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { ProfileImage } from "../components/ProfileImage.js";
 import { useEffect, useState } from "react";
-import apiAuth from "../services/apiAuth.js";
+import apiPosts from "../services/apiAuth.js";
 import { useNavigate, useParams } from "react-router";
 
 export default function UserPage() {
@@ -15,7 +15,7 @@ export default function UserPage() {
                 const token = localStorage.getItem("token")
                 if (!token) return navigate("/")
                 if (!Number.isInteger(Number(params.id))) return navigate("/timeline")
-                const userInfo = await apiAuth.getUserByID(token, params.id)
+                const userInfo = await apiPosts.getPostsByUserID(token, params.id)
                 if (!(userInfo?.data?.name.length > 0)) return navigate("/timeline")
                 setUserInfo(prev => userInfo.data)
             } catch (e) {
