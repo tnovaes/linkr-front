@@ -1,7 +1,60 @@
 import styled from "styled-components";
 import { ProfileImage } from "../components/ProfileImage.js";
+import { useNavigate } from "react-router-dom";
+import apiPosts from "../services/apiPosts.js";
+import { useEffect, useState } from "react";
 
 export default function TimelinePage() {
+    const [feed, setFeed] = useState([]);
+    const [form, setForm] = useState({ shared_link: "", description: "" });
+    const [disabled, setDisabled] = useState(false);
+    const [reload, setReload] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) return navigate("/");
+
+                const timeline = await apiPosts.getTimeline(token);
+                if (timeline.status === 204) {
+                    alert("There are no posts yet");
+                } else {
+                    setFeed(timeline.data);
+                }
+
+            } catch (err) {
+                console.log(err.response)
+                alert("An error occured while trying to fetch the posts, please refresh the page");
+            }
+        })()
+    }, [reload])
+
+    function handleForm(e) {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    function handlePost(e) {
+        e.preventDefault();
+        setDisabled(true);
+
+        if (!form.shared_link) return alert("Link input must be filled");
+
+        const token = localStorage.getItem("token");
+
+        apiPosts.publishPost(form, token)
+            .then(res => {
+                setForm({ shared_link: "", description: "" });
+                setDisabled(false);
+                setReload(!reload);
+            })
+            .catch(err => {
+                alert("There was an error publishing your link")
+                console.log(err.response.data);
+                setDisabled(false);
+            });
+    }
 
     return (
         <TimelinePageContainer>
@@ -9,29 +62,47 @@ export default function TimelinePage() {
                 <Title>timeline</Title>
                 <SharePostContainer>
                     <ProfileImage width="50px" height="50px" />
-                    <PostInfo>
+                    <PostForm onSubmit={handlePost}>
                         <CTA>What are you going to share today?</CTA>
-                        <LinkInput placeholder="http://..."></LinkInput>
-                        <DescriptionInput placeholder="Awesome link about your #passion"></DescriptionInput>
-                        <Button>Publish</Button>
-                    </PostInfo>
+                        <LinkInput
+                            placeholder="http://..."
+                            name="shared_link"
+                            type="url"
+                            required
+                            value={form.shared_link}
+                            onChange={handleForm}
+                            disabled={disabled}
+                        ></LinkInput>
+                        <DescriptionInput
+                            placeholder="Awesome link about your #passion"
+                            name="description"
+                            type="text"
+                            value={form.description}
+                            onChange={handleForm}
+                            disabled={disabled}
+                        ></DescriptionInput>
+                        <Button type="submit" disabled={disabled}>{disabled ? "Publishing..." : "Publish"}</Button>
+                    </PostForm>
                 </SharePostContainer>
-                <PostContainer>
-                    <ProfileImage width="50px" height="50px" />
-                    <PostInfo>
-                        <Username>Nome de usuário</Username>
-                        <PostDescription>Descrição</PostDescription>
-                        <Metadados></Metadados>
-                    </PostInfo>
-                </PostContainer>
-                <PostContainer>
-                    <ProfileImage width="50px" height="50px" />
-                    <PostInfo>
-                        <Username>Nome de usuário</Username>
-                        <PostDescription>Descrição</PostDescription>
-                        <Metadados></Metadados>
-                    </PostInfo>
-                </PostContainer>
+                {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                    feed.map((f) =>
+                        <PostContainer>
+                            <ProfileImage profileImgUrl={f.avatar} width="50px" height="50px" />
+                            <PostInfo>
+                                <Username>{f.name}</Username>
+                                <PostDescription>{f.description}</PostDescription>
+                                <Metadata href={f.shared_link} target="_blank">
+                                    <LinkInfo>
+                                        <LinkTitle>{f.link_title}</LinkTitle>
+                                        <LinkDescription>{f.link_description}</LinkDescription>
+                                        <LinkURL>{f.shared_link}</LinkURL>
+                                    </LinkInfo>
+                                    <LinkImage src={f.link_image}></LinkImage>
+                                </Metadata>
+                            </PostInfo>
+                        </PostContainer>
+                    )
+                }
             </FeedContainer>
         </TimelinePageContainer>
     )
@@ -41,6 +112,7 @@ const TimelinePageContainer = styled.div`
     display:flex;
     justify-content:center;
     width: 100%;
+    min-height: 100%;
     background-color: #333333;
 `
 
@@ -72,8 +144,16 @@ const SharePostContainer = styled.div`
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
     border-radius: 16px;
     margin-top: 43px;
+    margin-bottom: 29px;
     padding: 16px;
     gap: 18px;
+`
+
+const PostForm = styled.form`
+    display:flex;
+    flex-direction: column;
+    max-width: 502px;
+    gap:7px;
 `
 
 const PostInfo = styled.div`
@@ -137,7 +217,6 @@ const PostContainer = styled.div`
     width:100%;
     background: #171717;
     border-radius: 16px;
-    margin-top: 43px;
     padding-left: 18px;
     padding: 19px;
     margin-bottom: 16px;
@@ -168,13 +247,70 @@ const PostDescription = styled.p`
     text-align: left;
 `
 
-const Metadados = styled.div`
+const Metadata = styled.a`
+    display: flex;
+    justify-content: space-between;
     width: 100%;
     height: 155px;
     border: 1px solid #4D4D4D;
     border-radius: 11px;
+    text-decoration: none;
 `
 
+const LinkInfo = styled.div`
+    max-width:302px;
+    padding: 23px 20px;
+    display:flex;
+    flex-direction: column;
+    word-wrap: break-word;
+`
+
+const LinkTitle = styled.h1`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 19px;
+    color: #CECECE;
+    margin-bottom:5px;
+`
+
+const LinkDescription = styled.p`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 13px;
+    color: #9B9595;
+    margin-bottom: 13px;
+`
+
+const LinkURL = styled.p`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 13px;
+    color: #CECECE;
+`
+
+const LinkImage = styled.img`
+    max-width: 153px;
+    max-height: 155px;
+    object-fit: cover;
+`
+
+const NoFeed = styled.div`
+    margin-top: 50px;
+    font-family: 'Oswald';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 43px;
+    line-height: 64px;
+    color: #FFFFFF;
+    display: flex;
+    justify-content:center;
+`
 
 
 

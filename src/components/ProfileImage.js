@@ -5,4 +5,5 @@ export function ProfileImage({ profileImgUrl = noPic, width='50px', height='50px
 }
 const Image = styled.img`
 border-radius:50%;
+object-fit: cover;
 `
