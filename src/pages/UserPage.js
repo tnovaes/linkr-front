@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { ProfileImage } from "../components/ProfileImage.js";
 import { useEffect, useState } from "react";
-import apiPosts from "../services/apiAuth.js";
+import apiPosts from "../services/apiPosts.js";
 import { useNavigate, useParams } from "react-router";
 
 export default function UserPage() {
