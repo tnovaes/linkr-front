@@ -14,10 +14,11 @@ function logout(token) {
 function getUsers(token, searchText) {
     return axios.post(`${BASE_URL}/users`, { searchText }, { headers: { Authorization: token } });
 }
-function getUserByID(token, id) {
-    return axios.get(`${BASE_URL}/users/${id}`, { headers: { Authorization: token } });
+function getUserPhoto(token) {
+    console.log(token)
+    return axios.get(`${BASE_URL}/users/profilePhotoUrl`, { headers: { Authorization: token } });
 }
 
-const apiAuth = { signUp, signIn, logout, getUsers, getUserByID };
+const apiAuth = { signUp, signIn, logout, getUsers, getUserPhoto };
 
 export default apiAuth;

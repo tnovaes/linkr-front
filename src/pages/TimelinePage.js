@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import apiPosts from "../services/apiPosts.js";
 import { useEffect, useState } from "react";
 
-export default function TimelinePage() {
+export default function TimelinePage({userProfileImage}) {
     const [feed, setFeed] = useState([]);
     const [form, setForm] = useState({ shared_link: "", description: "" });
     const [disabled, setDisabled] = useState(false);
@@ -61,7 +61,7 @@ export default function TimelinePage() {
             <FeedContainer>
                 <Title>timeline</Title>
                 <SharePostContainer>
-                    <ProfileImage width="50px" height="50px" />
+                    <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
                     <PostForm onSubmit={handlePost}>
                         <CTA>What are you going to share today?</CTA>
                         <LinkInput
@@ -87,7 +87,7 @@ export default function TimelinePage() {
                 {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
                     feed.map((f) =>
                         <PostContainer>
-                            <ProfileImage profileImgUrl={f.avatar} width="50px" height="50px" />
+                            <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                             <PostInfo>
                                 <Username>{f.name}</Username>
                                 <PostDescription>{f.description}</PostDescription>
