@@ -6,13 +6,15 @@ import { fadeGrow } from "../styles/keyframes.js";
 import { useNavigate } from "react-router";
 import apiAuth from "../services/apiAuth.js";
 import { DebounceInput } from 'react-debounce-input';
-export function Header({ children, userProfileImage, setUserProfileImage }) {
+import { usePhoto } from "../hooks/useImage.js";
+export function Header({ children }) {
     const [searchInputValue, setSearchInputValue] = useState("")
     const [usersList, setUsersList] = useState([])
     const [arrowDirection, setArrowDirection] = useState(false)
     const [showMenu, setShowMenu] = useState(false)
     const navigate = useNavigate()
     const searchContainerRef = useRef()
+    const { userProfileImage } = usePhoto()
     function handleMenu() {
         setArrowDirection((prev) => !prev)
         setShowMenu((prev) => !prev)
@@ -59,23 +61,6 @@ export function Header({ children, userProfileImage, setUserProfileImage }) {
             document.removeEventListener('click', cleanInput);
         };
     }, []);
-
-    useEffect(() => {
-        (async () => {
-            const token = localStorage.getItem("token")
-            if (token === null) {
-                setUserProfileImage("")
-                return navigate('/')
-            }
-            const photoUrl = await apiAuth.getUserPhoto(token)
-            console.log(photoUrl.data)
-            if (photoUrl.status === 200) {
-                const avatarUrl = photoUrl.data.avatar
-                setUserProfileImage(() => avatarUrl)
-            }
-        })()
-
-    }, [])
     return (<>
         <HeaderContainer>
             <Logo>linkr</Logo>
@@ -94,7 +79,7 @@ export function Header({ children, userProfileImage, setUserProfileImage }) {
                 <UserListContainer >
                     {usersList.map(item =>
                         <UserListItem id={item.id} key={item.id}>
-                            <ProfileImage id={item.id} width={'39px'} height={'39px'} userProfileImageUrl={item.avatar} />
+                            <ProfileImage id={item.id} width={'39px'} height={'39px'} userProfileImage={item.avatar} />
                             <p id={item.id}>{item.name}</p>
                         </UserListItem>
                     )}
@@ -178,10 +163,6 @@ display: flex;
 flex-direction: column;
 max-height:60%;
 overflow-y:hidden;
-@media (max-width:1000px){
-    background-color:black;
-    width:20px;
-}
 input{
     height:45px;
 }
