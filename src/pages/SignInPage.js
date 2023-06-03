@@ -18,8 +18,9 @@ export default function SignInPage() {
     try {
       const response = await apiAuth.signIn(form)
       if (response.status === 200) {
-        const { token } = await response.data
+        const { token, id } = await response.data
         localStorage.setItem("token", `Bearer ${token}`)
+        localStorage.setItem("id", `${id}`)
         navigate('/timeline')
       }
     } catch (error) {
