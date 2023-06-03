@@ -20,7 +20,7 @@ export default function SignInPage() {
       if (response.status === 200) {
         const { token, id } = await response.data
         localStorage.setItem("token", `Bearer ${token}`)
-        localStorage.setItem("id", `11`)
+        localStorage.setItem("id", `${id}`)
         navigate('/timeline')
       }
     } catch (error) {
