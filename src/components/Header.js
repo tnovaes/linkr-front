@@ -24,6 +24,7 @@ export function Header({ children }) {
             const token = localStorage.getItem("token")
             await apiAuth.logout(token)
             localStorage.removeItem("token")
+            localStorage.removeItem("id")
             //colocar qualquer outro cleanup que precisar aqui 
             navigate("/")
         } catch (e) {

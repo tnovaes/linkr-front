@@ -9,6 +9,7 @@ export default function TimelinePage() {
     const [feed, setFeed] = useState([]);
     const [form, setForm] = useState({ shared_link: "", description: "" });
     const [disabled, setDisabled] = useState(false);
+    const [userId, setUserId] = useState("");
     const [reload, setReload] = useState(false);
     const navigate = useNavigate();
     const { userProfileImage } = usePhoto()
@@ -16,13 +17,15 @@ export default function TimelinePage() {
         (async () => {
             try {
                 const token = localStorage.getItem("token");
+                const idUser = localStorage.getItem("id");
                 if (!token) return navigate("/");
 
                 const timeline = await apiPosts.getTimeline(token);
                 if (timeline.status === 204) {
                     alert("There are no posts yet");
                 } else {
-                    setFeed(timeline.data);
+                    setFeed(timeline.data[0]);
+                    setUserId(idUser);
                 }
 
             } catch (err) {
@@ -86,11 +89,17 @@ export default function TimelinePage() {
                     </PostForm>
                 </SharePostContainer>
                 {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                    feed.map((f) =>
-                        <PostContainer>
+                    feed.map((f,index) =>{
+                        return(<PostContainer key={index}>
                             <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                             <PostInfo>
-                                <Username>{f.name}</Username>
+                                <TopLine>
+                                    <Username>{f.name}</Username>
+                                    { (f.post_owner == userId) && <ButtonBox>
+                                        <button>lápis</button>
+                                        <button>lixo</button>
+                                    </ButtonBox>}
+                                </TopLine>
                                 <PostDescription>{f.description}</PostDescription>
                                 <Metadata href={f.shared_link} target="_blank">
                                     <LinkInfo>
@@ -102,6 +111,7 @@ export default function TimelinePage() {
                                 </Metadata>
                             </PostInfo>
                         </PostContainer>
+                        )}
                     )
                 }
             </FeedContainer>
@@ -311,6 +321,18 @@ const NoFeed = styled.div`
     color: #FFFFFF;
     display: flex;
     justify-content:center;
+`
+
+const TopLine = styled.div`
+    display: flex;
+    justify-content: space-between;
+`
+
+const ButtonBox = styled.div`
+    background-color: red;
+    max-width: 80px;
+    display: flex;
+    justify-content: space-around
 `
 
 
