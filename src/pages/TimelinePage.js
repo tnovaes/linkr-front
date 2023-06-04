@@ -8,7 +8,6 @@ import trashCan from "../assets/trash.svg";
 import pencil from "../assets/pencil.svg";
 import Modal from "../components/Modal.js";
 
-
 export default function TimelinePage() {
     const [feed, setFeed] = useState([]);
     const [trending, setTrending] = useState([]);
