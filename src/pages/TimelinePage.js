@@ -11,6 +11,7 @@ import Modal from "../components/Modal.js";
 
 export default function TimelinePage() {
     const [feed, setFeed] = useState([]);
+    const [trending, setTrending] = useState([]);
     const [form, setForm] = useState({ shared_link: "", description: "" });
     const [disabled, setDisabled] = useState(false);
     const [userId, setUserId] = useState("");
@@ -19,7 +20,8 @@ export default function TimelinePage() {
     const [openModal, setOpenModal] = useState(false);
     const [selectedPost, setSelectedPost] = useState(0);
     const navigate = useNavigate();
-    const { userProfileImage } = usePhoto()
+    const { userProfileImage } = usePhoto();
+
     useEffect(() => {
         (async () => {
             try {
@@ -132,6 +134,17 @@ export default function TimelinePage() {
                     )
                 }
             </FeedContainer>
+            <TrendingsContainer>
+                <TrendTitle>
+                    trending
+                </TrendTitle>
+                    {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                    trending.map((h) => 
+                        <TrendHashtags key={h.hashtag_id}>
+                            {h.name}
+                        </TrendHashtags>
+                    )}
+            </TrendingsContainer>
             <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
         </TimelinePageContainer>
     )
@@ -151,6 +164,37 @@ const FeedContainer = styled.div`
     align-items: center;
     max-width: 611px;
     margin-top: 72px;
+`
+
+const TrendingsContainer = styled.div`
+    max-width: 300px;
+    height: 405px;
+    background-color: #171717;
+    margin-top: 257px;
+    border-radius: 16px;    
+`
+
+const TrendTitle = styled.div`
+    font-family: 'Oswald';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 27px;
+    line-height: 60px;
+    color: #FFFFFF;
+    padding-left: 15px;
+    border-bottom: 1px solid #484848;
+    margin-bottom: 22px;
+`
+
+const TrendHashtags = styled.div`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 24px;
+    color: #FFFFFF;
+    padding-left: 15px;
+    margin: 5px 0 ;
 `
 
 const Title = styled.div`
