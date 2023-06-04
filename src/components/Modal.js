@@ -4,28 +4,26 @@ import { useEffect, useState } from "react";
 import { ThreeDots } from "react-loader-spinner";
 import { useNavigate } from "react-router-dom";
 
-export default function Modal({ isOpen, closeModal, setOpenModal, token, post_id }) {
+export default function Modal({ isOpen, closeModal, token, post_id }) {
     const [load, setLoad] = useState(false);
     const navigate = useNavigate()
 
     useEffect(() => {
         setLoad(false)
-    }, [])
+    }, [isOpen])
     async function deletePost(token, id) {
         try {
             setLoad(true)
-            const promisse = await apiPosts.deletePostByID(token, id);
+            const promisse = await apiPosts.deletePostByID(token,id);
+            console.log(promisse)
             if (promisse.status === 200) {
                 setLoad(false)
-                navigate('/timeline')
-            } else {
-                setLoad(false)
-                alert("something whent Wrong")
-                navigate('/timeline')
+                navigate(0)
             }
         } catch (err) {
             console.log(err.response)
             alert("An error occurred while trying to delete the posts, please refresh the page");
+            navigate(0)
         }
     }
 
@@ -81,7 +79,11 @@ const Buttons = styled.div`
     margin-right: auto;
     max-width: 320px;
     display: flex;
-    justify-content: space-between
+    justify-content: space-between;
+
+    button{
+        visibility: visible;
+    }
 `
 
 const ButtonA = styled.button`

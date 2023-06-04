@@ -17,6 +17,7 @@ export default function TimelinePage() {
     const [userToken, setUserToken] = useState("")
     const [reload, setReload] = useState(false);
     const [openModal, setOpenModal] = useState(false);
+    const [selectedPost, setSelectedPost] = useState(0);
     const navigate = useNavigate();
     const { userProfileImage } = usePhoto()
     useEffect(() => {
@@ -67,6 +68,11 @@ export default function TimelinePage() {
             });
     }
 
+    function handleModal(postId){
+        setSelectedPost(postId)
+        setOpenModal(true)
+    }
+
     return (
         <TimelinePageContainer>
             <FeedContainer>
@@ -104,13 +110,12 @@ export default function TimelinePage() {
                                     <Username>{f.name}</Username>
                                     { (f.post_owner == userId) && <ButtonBox>
                                         <button onClick={()=> console.log('alterar')}>
-                                            <img src={pencil}></img>
+                                            <img src={pencil} alt="Edit"/>
                                         </button>
-                                        <button onClick={()=> setOpenModal(true)}>
-                                            <img src={trashCan}></img>
+                                        <button onClick={()=> handleModal(f.post_id)}>
+                                            <img src={trashCan} alt="Delete"/>
                                         </button>
                                     </ButtonBox>}
-                                    <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
                                 </TopLine>
                                 <PostDescription>{f.description}</PostDescription>
                                 <Metadata href={f.shared_link} target="_blank">
@@ -127,6 +132,7 @@ export default function TimelinePage() {
                     )
                 }
             </FeedContainer>
+            <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
         </TimelinePageContainer>
     )
 }
