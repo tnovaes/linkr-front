@@ -61,6 +61,7 @@ export function Header({ children }) {
             searchContainer.removeEventListener('click', handleUserProfileNavigation, { capture: true });
             document.removeEventListener('click', cleanInput);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     return (<>
         <HeaderContainer>

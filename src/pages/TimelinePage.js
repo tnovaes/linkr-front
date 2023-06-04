@@ -18,7 +18,8 @@ export default function TimelinePage() {
     const [reload, setReload] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const navigate = useNavigate();
-    const { userProfileImage } = usePhoto()
+    const { userProfileImage } = usePhoto();
+    
     useEffect(() => {
         (async () => {
             try {
@@ -40,6 +41,7 @@ export default function TimelinePage() {
                 alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reload])
 
     function handleForm(e) {
@@ -104,10 +106,10 @@ export default function TimelinePage() {
                                     <Username>{f.name}</Username>
                                     { (f.post_owner == userId) && <ButtonBox>
                                         <button onClick={()=> console.log('alterar')}>
-                                            <img src={pencil}></img>
+                                            <img src={pencil} al="pencil"></img>
                                         </button>
                                         <button onClick={()=> setOpenModal(true)}>
-                                            <img src={trashCan}></img>
+                                            <img src={trashCan} alt="trashCan"></img>
                                         </button>
                                     </ButtonBox>}
                                     <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>

@@ -22,6 +22,7 @@ export default function UserPage() {
                 navigate("/timeline")
             }
         })()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     return (
         <TimelinePageContainer>
