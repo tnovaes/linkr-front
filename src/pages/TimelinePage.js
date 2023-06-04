@@ -163,6 +163,7 @@ const TimelinePageContainer = styled.div`
     width: 100%;
     min-height: 100%;
     background-color: #333333;
+    gap: 25px;
 `
 
 const FeedContainer = styled.div`
@@ -179,7 +180,6 @@ const TrendingsContainer = styled.div`
     background-color: #171717;
     margin-top: 257px;
     border-radius: 16px;
-    gap: 25px;
 `
 
 const TrendTitle = styled.div`
