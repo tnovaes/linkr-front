@@ -2,43 +2,84 @@ import styled from "styled-components";
 import { ProfileImage } from "../components/ProfileImage.js";
 import { useEffect, useState } from "react";
 import apiPosts from "../services/apiPosts.js";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import reactStringReplace from 'react-string-replace';
 
 export default function UserPage() {
-    const [userInfo, setUserInfo] = useState({})
-    const navigate = useNavigate()
-    const params = useParams()
-    console.log(params)
+    const { id } = useParams();
+    const [feed, setFeed] = useState([]);
+    const [trending, setTrending] = useState([]);
+    const [carregando, setCarregando] = useState(false);
+    const [name, setName] = useState ([]);
+    const navigate = useNavigate();
+
     useEffect(() => {
+        setCarregando(true);
         (async () => {
             try {
                 const token = localStorage.getItem("token")
                 if (!token) return navigate("/")
-                if (!Number.isInteger(Number(params.id))) return navigate("/timeline")
-                const userInfo = await apiPosts.getPostsByUserID(token, params.id)
-                if (!(userInfo?.data?.name.length > 0)) return navigate("/timeline")
-                setUserInfo(prev => userInfo.data)
-            } catch (e) {
-                navigate("/timeline")
+                if (!Number.isInteger(Number(id))) return navigate("/timeline")
+                const userInfo = await apiPosts.getPostsByUserID(token, id)
+                const arrayName = userInfo.data[2];
+                console.log(userInfo.data);
+                console.log(userInfo.data[0])
+                setFeed(userInfo.data[0]);
+                setTrending(userInfo.data[1]);
+                setName(arrayName[0]);
+                setCarregando(false);
+            } catch (err) {
+                console.log(err.response)
+                alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, []);
+
+    
     return (
         <TimelinePageContainer>
             <FeedContainer>
-                <Title><span>{userInfo.name}</span>'s posts</Title>
-                {userInfo?.posts?.map(item =>
-                    <PostContainer>
-                        <ProfileImage profileImgUrl={userInfo.avatar} width="50px" height="50px" />
-                        <PostInfo>
-                            <Username>{userInfo.name}</Username>
-                            <PostDescription>{item.description}</PostDescription>
-                            <Metadados>{item.shared_link}</Metadados>
-                        </PostInfo>
-                    </PostContainer>
-                )}
+                {carregando === true ? <NoFeed>Loading...</NoFeed> :
+                 <Title>{name.name}'s posts</Title>
+                }
+                {(carregando === false && !feed) ? <NoFeed> Sem posts </NoFeed> :
+                (carregando === false && feed) &&
+                    feed.map((f, index) =>
+                        <PostContainer key={index}>
+                            <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                            <PostInfo>
+                                <TopLine>
+                                    <Username>{f.name}</Username>
+                                </TopLine>
+                                <PostDescription>
+                                    {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                        <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                    ))}
+                                </PostDescription>
+                                <Metadata href={f.shared_link} target="_blank">
+                                    <LinkInfo>
+                                        <LinkTitle>{f.link_title}</LinkTitle>
+                                        <LinkDescription>{f.link_description}</LinkDescription>
+                                        <LinkURL>{f.shared_link}</LinkURL>
+                                    </LinkInfo>
+                                    <LinkImage src={f.link_image}></LinkImage>
+                                </Metadata>
+                            </PostInfo>
+                        </PostContainer>
+                    )}
             </FeedContainer>
+            <TrendingsContainer>
+                <TrendTitle>
+                    trending
+                </TrendTitle>
+                {carregando === true ? <NoFeed>Loading...</NoFeed> :
+                    trending.map((h) =>
+                        <TrendHashtags key={h.name} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)}>
+                            {h.name}
+                        </TrendHashtags>
+                    )}
+            </TrendingsContainer>
         </TimelinePageContainer>
     )
 }
@@ -49,6 +90,7 @@ const TimelinePageContainer = styled.div`
     width: 100%;
     background-color: #333333;
     min-height:100%;
+    gap: 25px;
 `
 
 const FeedContainer = styled.div`
@@ -68,22 +110,7 @@ const Title = styled.div`
     line-height: 64px;
     color: #FFFFFF;
     align-self: flex-start;
-    span{
-        text-transform:capitalize;
-    }
-`
-
-const SharePostContainer = styled.div`
-    display:flex;
-    justify-content: space-between;
-    width:100%;
-    height: 209px;
-    background: #FFFFFF;
-    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-    border-radius: 16px;
-    margin-top: 43px;
-    padding: 16px;
-    gap: 18px;
+    margin-bottom: 44px;
 `
 
 const PostInfo = styled.div`
@@ -93,66 +120,31 @@ const PostInfo = styled.div`
     gap:7px;
 `
 
-const CTA = styled.h1`
-    font-family: 'Lato';
-    font-style: normal;
-    font-weight: 300;
-    font-size: 20px;
-    line-height: 24px;
-    color: #707070;
-    align-self: flex-start;
-`
-
-const LinkInput = styled.input`
-    width: 502px;
-    height: 30px;
-    background: #EFEFEF;
-    border-radius: 5px;
-    align-self: flex-start;
-    padding-left: 10px;
-    font-family: 'Lato';
-    font-style: normal;
-    font-weight: 300;
-    font-size: 15px;
-    line-height: 18px;
-    margin-top:10px;
-`
-
-const DescriptionInput = styled.input`
-    width: 502px;
-    height: 66px;
-    background: #EFEFEF;
-    border-radius: 5px;
-    align-self: flex-start;
-    padding-left: 10px;
-    font-family: 'Lato';
-    font-style: normal;
-    font-weight: 300;
-    font-size: 15px;
-    line-height: 18px;
-    word-wrap: break-word;
-`
-
-const Button = styled.button`
-    width: 112px;
-    height: 31px;
-    background: #1877F2;
-    border-radius: 5px;
-    align-self: flex-end;
-`
-
 const PostContainer = styled.div`
     display:flex;
     justify-content: space-between;
     width:100%;
     background: #171717;
     border-radius: 16px;
-    margin-top: 43px;
     padding-left: 18px;
     padding: 19px;
     margin-bottom: 16px;
     gap: 5px;
     box-sizing: border-box;
+    button{
+        visibility: hidden;
+    }
+
+    :hover{
+        button{
+            visibility:visible;
+        }
+    }
+`
+
+const TopLine = styled.div`
+    display: flex;
+    justify-content: space-between;
 `
 
 const Username = styled.h1`
@@ -166,7 +158,7 @@ const Username = styled.h1`
 `
 
 const PostDescription = styled.p`
-    max-width:100%;
+    max-width: 100%;
     font-family: 'Lato';
     font-style: normal;
     font-weight: 400;
@@ -176,18 +168,114 @@ const PostDescription = styled.p`
     align-self: flex-start;
     word-wrap: break-word;
     text-align: left;
+    a {
+        font-weight: 700; 
+        text-decoration: none;
+        color: #FFFFFF;
+    }
+    a:hover{
+        cursor: pointer;
+    }
 `
 
-const Metadados = styled.div`
+const Metadata = styled.a`
+    display: flex;
+    justify-content: space-between;
     width: 100%;
     height: 155px;
     border: 1px solid #4D4D4D;
     border-radius: 11px;
+    text-decoration: none;
 `
 
+const LinkInfo = styled.div`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    max-width: 302px;
+    padding: 20px 20px;
+    display: flex;
+    flex-direction: column;
+    word-wrap: break-word;
+    gap: 4px;
+`
 
+const LinkTitle = styled.h1`
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 18px;
+    height: 36px;
+    color: #CECECE;
+    word-wrap: break-word;
+    overflow: hidden;
+`
+const LinkDescription = styled.p`
+    font-size: 11px;
+    line-height: 12.5px;
+    height: 38px;
+    color: #9B9595;
+    word-wrap: break-word;
+    overflow: hidden;
+`
 
+const LinkURL = styled.p`
+    font-size: 11px;
+    line-height: 14px;
+    height: 28px;
+    color: #CECECE;
+    word-wrap: break-word;
+    overflow: hidden;
 
+`
 
+const LinkImage = styled.img`
+    max-width: 153px;
+    max-height: 155px;
+    object-fit: cover;
+`
 
+const NoFeed = styled.div`
+    margin-top: 50px;
+    font-family: 'Oswald';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 43px;
+    line-height: 64px;
+    color: #FFFFFF;
+    display: flex;
+    justify-content:center;
+`
 
+const TrendingsContainer = styled.div`
+    max-width: 300px;
+    height: 405px;
+    background-color: #171717;
+    margin-top: 257px;
+    border-radius: 16px;    
+`
+
+const TrendTitle = styled.div`
+    font-family: 'Oswald';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 27px;
+    line-height: 60px;
+    color: #FFFFFF;
+    padding-left: 15px;
+    border-bottom: 1px solid #484848;
+    margin-bottom: 22px;
+`
+
+const TrendHashtags = styled.div`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 24px;
+    color: #FFFFFF;
+    padding-left: 15px;
+    margin: 5px 0 ;
+    :hover {
+        cursor:pointer;
+    }
+`

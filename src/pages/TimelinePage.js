@@ -21,7 +21,7 @@ export default function TimelinePage() {
     const [selectedPost, setSelectedPost] = useState(0);
     const navigate = useNavigate();
     const { userProfileImage } = usePhoto();
-
+    console.log(feed)
     useEffect(() => {
         (async () => {
             try {
@@ -111,7 +111,9 @@ export default function TimelinePage() {
                                 <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                                 <PostInfo>
                                     <TopLine>
-                                        <Username>{f.name}</Username>
+                                        <Link to={`/user/${f.post_owner}`}>
+                                            <Username>{f.name}</Username>
+                                        </Link>
                                         {(f.post_owner === Number(userId)) && <ButtonBox>
                                             <button onClick={() => console.log('alterar')}>
                                                 <img src={pencil} alt="Edit" />
@@ -124,7 +126,7 @@ export default function TimelinePage() {
                                     </TopLine>
                                     <PostDescription>
                                         {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
-                                            <Link to ={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                            <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
                                         ))}
                                     </PostDescription>
                                     <Metadata href={f.shared_link} target="_blank">
@@ -307,11 +309,12 @@ const PostContainer = styled.div`
     margin-bottom: 16px;
     gap: 5px;
     box-sizing: border-box;
-
+    a{
+        text-decoration: none;
+    }
     button{
         visibility: hidden;
     }
-
     :hover{
         button{
             visibility:visible;
