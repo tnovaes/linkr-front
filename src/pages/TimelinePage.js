@@ -11,15 +11,16 @@ import Modal from "../components/Modal.js";
 
 export default function TimelinePage() {
     const [feed, setFeed] = useState([]);
+    const [trending, setTrending] = useState([]);
     const [form, setForm] = useState({ shared_link: "", description: "" });
     const [disabled, setDisabled] = useState(false);
     const [userId, setUserId] = useState("");
-    const [userToken, setUserToken] = useState("")
+    const [userToken, setUserToken] = useState("");
     const [reload, setReload] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const navigate = useNavigate();
     const { userProfileImage } = usePhoto();
-    
+    console.log(trending)
     useEffect(() => {
         (async () => {
             try {
@@ -32,6 +33,7 @@ export default function TimelinePage() {
                     alert("There are no posts yet");
                 } else {
                     setFeed(timeline.data[0]);
+                    setTrending(timeline.data[1]);
                     setUserId(idUser);
                     setUserToken(token);
                 }
@@ -42,7 +44,7 @@ export default function TimelinePage() {
             }
         })()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [reload])
+    }, [reload]);
 
     function handleForm(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -98,8 +100,9 @@ export default function TimelinePage() {
                     </PostForm>
                 </SharePostContainer>
                 {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                    feed.map((f,index) =>{
-                        return(<PostContainer key={index}>
+                    feed.map((f, index) => {
+                        return (
+                        <PostContainer key={index}>
                             <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                             <PostInfo>
                                 <TopLine>
@@ -125,20 +128,33 @@ export default function TimelinePage() {
                                 </Metadata>
                             </PostInfo>
                         </PostContainer>
-                        )}
-                    )
+
+                        )
+                    })
                 }
             </FeedContainer>
+            <TrendingsContainer>
+                <TrendTitle>
+                    trending
+                </TrendTitle>
+                    {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                    trending.map((h) => 
+                        <TrendHashtags key={h.hashtag_id}>
+                            {h.name}
+                        </TrendHashtags>
+                    )}
+            </TrendingsContainer>
         </TimelinePageContainer>
     )
 }
 
 const TimelinePageContainer = styled.div`
     display:flex;
-    justify-content:center;
+    justify-content: center;
     width: 100%;
     min-height: 100%;
     background-color: #333333;
+    gap: 25px;
 `
 
 const FeedContainer = styled.div`
@@ -147,6 +163,37 @@ const FeedContainer = styled.div`
     align-items: center;
     max-width: 611px;
     margin-top: 72px;
+`
+
+const TrendingsContainer = styled.div`
+    max-width: 300px;
+    height: 405px;
+    background-color: #171717;
+    margin-top: 257px;
+    border-radius: 16px;    
+`
+
+const TrendTitle = styled.div`
+    font-family: 'Oswald';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 27px;
+    line-height: 60px;
+    color: #FFFFFF;
+    padding-left: 15px;
+    border-bottom: 1px solid #484848;
+    margin-bottom: 22px;
+`
+
+const TrendHashtags = styled.div`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 24px;
+    color: #FFFFFF;
+    padding-left: 15px;
+    margin: 5px 0 ;
 `
 
 const Title = styled.div`
@@ -226,6 +273,7 @@ const DescriptionInput = styled.input`
     font-size: 15px;
     line-height: 18px;
     word-wrap: break-word;
+    word-break: break-word;
 `
 
 const Button = styled.button`
@@ -247,7 +295,6 @@ const PostContainer = styled.div`
     margin-bottom: 16px;
     gap: 5px;
     box-sizing: border-box;
-
     button{
         visibility: hidden;
     }
@@ -270,7 +317,7 @@ const Username = styled.h1`
 `
 
 const PostDescription = styled.p`
-    max-width:100%;
+    max-width: 100%;
     font-family: 'Lato';
     font-style: normal;
     font-weight: 400;
@@ -293,40 +340,43 @@ const Metadata = styled.a`
 `
 
 const LinkInfo = styled.div`
-    max-width:302px;
-    padding: 23px 20px;
-    display:flex;
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    max-width: 302px;
+    padding: 20px 20px;
+    display: flex;
     flex-direction: column;
     word-wrap: break-word;
+    gap: 4px;
 `
 
 const LinkTitle = styled.h1`
-    font-family: 'Lato';
-    font-style: normal;
     font-weight: 400;
     font-size: 16px;
-    line-height: 19px;
+    line-height: 18px;
+    height: 36px;
     color: #CECECE;
-    margin-bottom:5px;
+    word-wrap: break-word;
+    overflow: hidden;
 `
-
 const LinkDescription = styled.p`
-    font-family: 'Lato';
-    font-style: normal;
-    font-weight: 400;
     font-size: 11px;
-    line-height: 13px;
+    line-height: 12.5px;
+    height: 38px;
     color: #9B9595;
-    margin-bottom: 13px;
+    word-wrap: break-word;
+    overflow: hidden;
 `
 
 const LinkURL = styled.p`
-    font-family: 'Lato';
-    font-style: normal;
-    font-weight: 400;
     font-size: 11px;
-    line-height: 13px;
+    line-height: 14px;
+    height: 28px;
     color: #CECECE;
+    word-wrap: break-word;
+    overflow: hidden;
+
 `
 
 const LinkImage = styled.img`
