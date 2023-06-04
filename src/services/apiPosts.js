@@ -7,12 +7,16 @@ function getTimeline(token) {
 }
 
 function publishPost(body, token){
-    return axios.post(`${BASE_URL}/post`, body, { headers: { Authorization: token } })
+    return axios.post(`${BASE_URL}/post`, body, { headers: { Authorization: token } });
 }
 
 function getPostsByUserID(token, id) {
     return axios.get(`${BASE_URL}/posts/users/${id}`, { headers: { Authorization: token } });
 }
-const apiPosts = { getTimeline, publishPost, getPostsByUserID };
+
+function deletePostByID(token,id) {
+    return axios.delete(`${BASE_URL}/post/${id}`, { headers: { Authorization: token } });
+}
+const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID };
 
 export default apiPosts;

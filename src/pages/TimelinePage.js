@@ -4,13 +4,19 @@ import { useNavigate } from "react-router-dom";
 import apiPosts from "../services/apiPosts.js";
 import { useEffect, useState } from "react";
 import { usePhoto } from "../hooks/useImage.js";
+import trashCan from "../assets/trash.svg";
+import pencil from "../assets/pencil.svg";
+import Modal from "../components/Modal.js";
+
 
 export default function TimelinePage() {
     const [feed, setFeed] = useState([]);
     const [form, setForm] = useState({ shared_link: "", description: "" });
     const [disabled, setDisabled] = useState(false);
     const [userId, setUserId] = useState("");
+    const [userToken, setUserToken] = useState("")
     const [reload, setReload] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
     const navigate = useNavigate();
     const { userProfileImage } = usePhoto()
     useEffect(() => {
@@ -26,11 +32,12 @@ export default function TimelinePage() {
                 } else {
                     setFeed(timeline.data[0]);
                     setUserId(idUser);
+                    setUserToken(token);
                 }
 
             } catch (err) {
                 console.log(err.response)
-                alert("An error occured while trying to fetch the posts, please refresh the page");
+                alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
     }, [reload])
@@ -96,9 +103,14 @@ export default function TimelinePage() {
                                 <TopLine>
                                     <Username>{f.name}</Username>
                                     { (f.post_owner == userId) && <ButtonBox>
-                                        <button>lápis</button>
-                                        <button>lixo</button>
+                                        <button onClick={()=> console.log('alterar')}>
+                                            <img src={pencil}></img>
+                                        </button>
+                                        <button onClick={()=> setOpenModal(true)}>
+                                            <img src={trashCan}></img>
+                                        </button>
                                     </ButtonBox>}
+                                    <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
                                 </TopLine>
                                 <PostDescription>{f.description}</PostDescription>
                                 <Metadata href={f.shared_link} target="_blank">
@@ -233,6 +245,16 @@ const PostContainer = styled.div`
     margin-bottom: 16px;
     gap: 5px;
     box-sizing: border-box;
+
+    button{
+        visibility: hidden;
+    }
+
+    :hover{
+        button{
+            visibility:visible;
+        }
+    }
 `
 
 const Username = styled.h1`
@@ -329,11 +351,15 @@ const TopLine = styled.div`
 `
 
 const ButtonBox = styled.div`
-    background-color: red;
-    max-width: 80px;
+    max-width: 70px;
     display: flex;
-    justify-content: space-around
+    justify-content: space-around;
+    
+    button{
+        background-color: transparent;
+    }
 `
+
 
 
 
