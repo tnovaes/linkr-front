@@ -1,12 +1,13 @@
 import styled from "styled-components";
 import { ProfileImage } from "../components/ProfileImage.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import apiPosts from "../services/apiPosts.js";
 import { useEffect, useState } from "react";
 import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
 import pencil from "../assets/pencil.svg";
 import Modal from "../components/Modal.js";
+import reactStringReplace from 'react-string-replace';
 
 export default function TimelinePage() {
     const [feed, setFeed] = useState([]);
@@ -20,7 +21,7 @@ export default function TimelinePage() {
     const [selectedPost, setSelectedPost] = useState(0);
     const navigate = useNavigate();
     const { userProfileImage } = usePhoto();
- 
+
     useEffect(() => {
         (async () => {
             try {
@@ -71,7 +72,7 @@ export default function TimelinePage() {
             });
     }
 
-    function handleModal(postId){
+    function handleModal(postId) {
         setSelectedPost(postId)
         setOpenModal(true)
     }
@@ -107,32 +108,36 @@ export default function TimelinePage() {
                 {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
                     feed.map((f, index) => {
                         return (
-                        <PostContainer key={index}>
-                            <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
-                            <PostInfo>
-                                <TopLine>
-                                    <Username>{f.name}</Username>
-                                    { (f.post_owner == userId) && <ButtonBox>
-                                        <button onClick={()=> console.log('alterar')}>
-                                            <img src={pencil} alt="Edit"/>
-                                        </button>
-                                        <button onClick={()=> handleModal(f.post_id)}>
-                                            <img src={trashCan} alt="Delete"/>
-                                        </button>
-                                    </ButtonBox>}
-                                    <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
-                                </TopLine>
-                                <PostDescription>{f.description}</PostDescription>
-                                <Metadata href={f.shared_link} target="_blank">
-                                    <LinkInfo>
-                                        <LinkTitle>{f.link_title}</LinkTitle>
-                                        <LinkDescription>{f.link_description}</LinkDescription>
-                                        <LinkURL>{f.shared_link}</LinkURL>
-                                    </LinkInfo>
-                                    <LinkImage src={f.link_image}></LinkImage>
-                                </Metadata>
-                            </PostInfo>
-                        </PostContainer>
+                            <PostContainer key={index}>
+                                <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                <PostInfo>
+                                    <TopLine>
+                                        <Username>{f.name}</Username>
+                                        {(f.post_owner === Number(userId)) && <ButtonBox>
+                                            <button onClick={() => console.log('alterar')}>
+                                                <img src={pencil} alt="Edit" />
+                                            </button>
+                                            <button onClick={() => handleModal(f.post_id)}>
+                                                <img src={trashCan} alt="Delete" />
+                                            </button>
+                                        </ButtonBox>}
+                                        <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
+                                    </TopLine>
+                                    <PostDescription>
+                                        {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                            <Link to ={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                        ))}
+                                    </PostDescription>
+                                    <Metadata href={f.shared_link} target="_blank">
+                                        <LinkInfo>
+                                            <LinkTitle>{f.link_title}</LinkTitle>
+                                            <LinkDescription>{f.link_description}</LinkDescription>
+                                            <LinkURL>{f.shared_link}</LinkURL>
+                                        </LinkInfo>
+                                        <LinkImage src={f.link_image}></LinkImage>
+                                    </Metadata>
+                                </PostInfo>
+                            </PostContainer>
 
                         )
                     })
@@ -142,14 +147,14 @@ export default function TimelinePage() {
                 <TrendTitle>
                     trending
                 </TrendTitle>
-                    {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                    trending.map((h) => 
-                        <TrendHashtags key={h.hashtag_id}>
+                {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                    trending.map((h) =>
+                        <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)}>
                             {h.name}
                         </TrendHashtags>
                     )}
             </TrendingsContainer>
-            <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
+            <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
         </TimelinePageContainer>
     )
 }
@@ -200,6 +205,9 @@ const TrendHashtags = styled.div`
     color: #FFFFFF;
     padding-left: 15px;
     margin: 5px 0 ;
+    :hover {
+        cursor:pointer;
+    }
 `
 
 const Title = styled.div`
@@ -333,6 +341,14 @@ const PostDescription = styled.p`
     align-self: flex-start;
     word-wrap: break-word;
     text-align: left;
+    a {
+        font-weight: 700; 
+        text-decoration: none;
+        color: #FFFFFF;
+    }
+    a:hover{
+        cursor: pointer;
+    }
 `
 
 const Metadata = styled.a`

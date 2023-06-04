@@ -45,7 +45,7 @@ export default function SignInPage() {
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     })()
-  }, [])
+  }, [navigate])
 
   return (
     <SignInPageContainer>

@@ -17,6 +17,10 @@ function getPostsByUserID(token, id) {
 function deletePostByID(token,id) {
     return axios.delete(`${BASE_URL}/post/${id}`, { headers: { Authorization: token } });
 }
-const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID };
+
+function getPostsByHashtag(token, name){
+    return axios.get(`${BASE_URL}/posts/hashtag/${name}`, { headers: { Authorization: token } });
+}
+const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID, getPostsByHashtag };
 
 export default apiPosts;
