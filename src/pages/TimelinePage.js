@@ -18,9 +18,10 @@ export default function TimelinePage() {
     const [userToken, setUserToken] = useState("");
     const [reload, setReload] = useState(false);
     const [openModal, setOpenModal] = useState(false);
+    const [selectedPost, setSelectedPost] = useState(0);
     const navigate = useNavigate();
     const { userProfileImage } = usePhoto();
-    console.log(trending)
+ 
     useEffect(() => {
         (async () => {
             try {
@@ -69,6 +70,11 @@ export default function TimelinePage() {
                 console.log(err.response.data);
                 setDisabled(false);
             });
+    }
+
+    function handleModal(postId){
+        setSelectedPost(postId)
+        setOpenModal(true)
     }
 
     return (
