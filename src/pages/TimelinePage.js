@@ -109,10 +109,10 @@ export default function TimelinePage() {
                                     <Username>{f.name}</Username>
                                     { (f.post_owner == userId) && <ButtonBox>
                                         <button onClick={()=> console.log('alterar')}>
-                                            <img src={pencil} al="pencil"></img>
+                                            <img src={pencil} alt="Edit"/>
                                         </button>
-                                        <button onClick={()=> setOpenModal(true)}>
-                                            <img src={trashCan} alt="trashCan"></img>
+                                        <button onClick={()=> handleModal(f.post_id)}>
+                                            <img src={trashCan} alt="Delete"/>
                                         </button>
                                     </ButtonBox>}
                                     <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
@@ -144,6 +144,7 @@ export default function TimelinePage() {
                         </TrendHashtags>
                     )}
             </TrendingsContainer>
+            <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
         </TimelinePageContainer>
     )
 }
