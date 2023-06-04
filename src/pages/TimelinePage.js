@@ -34,6 +34,7 @@ export default function TimelinePage() {
                     alert("There are no posts yet");
                 } else {
                     setFeed(timeline.data[0]);
+                    setTrending(timeline.data[1]);
                     setUserId(idUser);
                     setUserToken(token);
                 }
