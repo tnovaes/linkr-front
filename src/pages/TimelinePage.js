@@ -360,11 +360,15 @@ const Metadata = styled.a`
 `
 
 const LinkInfo = styled.div`
-    max-width:302px;
-    padding: 23px 20px;
-    display:flex;
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    max-width: 302px;
+    padding: 20px 20px;
+    display: flex;
     flex-direction: column;
     word-wrap: break-word;
+    gap: 4px;
 `
 
 const LinkTitle = styled.h1`
@@ -372,9 +376,11 @@ const LinkTitle = styled.h1`
     font-style: normal;
     font-weight: 400;
     font-size: 16px;
-    line-height: 19px;
+    line-height: 18px;
+    height: 36px;
     color: #CECECE;
-    margin-bottom:5px;
+    word-wrap: break-word;
+    overflow: hidden;
 `
 
 const LinkDescription = styled.p`
@@ -382,9 +388,11 @@ const LinkDescription = styled.p`
     font-style: normal;
     font-weight: 400;
     font-size: 11px;
-    line-height: 13px;
+    line-height: 12.5px;
+    height: 38px;
     color: #9B9595;
-    margin-bottom: 13px;
+    word-wrap: break-word;
+    overflow: hidden;
 `
 
 const LinkURL = styled.p`
@@ -392,8 +400,11 @@ const LinkURL = styled.p`
     font-style: normal;
     font-weight: 400;
     font-size: 11px;
-    line-height: 13px;
+    line-height: 14px;
+    height: 28px;
     color: #CECECE;
+    word-wrap: break-word;
+    overflow: hidden;
 `
 
 const LinkImage = styled.img`
