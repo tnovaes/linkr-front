@@ -1,16 +1,17 @@
 import styled from "styled-components";
 import { ProfileImage } from "../components/ProfileImage.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import apiPosts from "../services/apiPosts.js";
 import { useEffect, useState } from "react";
 import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
 import pencil from "../assets/pencil.svg";
 import Modal from "../components/Modal.js";
-
+import reactStringReplace from 'react-string-replace';
 
 export default function TimelinePage() {
     const [feed, setFeed] = useState([]);
+    const [trending, setTrending] = useState([]);
     const [form, setForm] = useState({ shared_link: "", description: "" });
     const [disabled, setDisabled] = useState(false);
     const [userId, setUserId] = useState("");
@@ -19,7 +20,8 @@ export default function TimelinePage() {
     const [openModal, setOpenModal] = useState(false);
     const [selectedPost, setSelectedPost] = useState(0);
     const navigate = useNavigate();
-    const { userProfileImage } = usePhoto()
+    const { userProfileImage } = usePhoto();
+
     useEffect(() => {
         (async () => {
             try {
@@ -68,7 +70,7 @@ export default function TimelinePage() {
             });
     }
 
-    function handleModal(postId){
+    function handleModal(postId) {
         setSelectedPost(postId)
         setOpenModal(true)
     }
@@ -102,37 +104,55 @@ export default function TimelinePage() {
                     </PostForm>
                 </SharePostContainer>
                 {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                    feed.map((f,index) =>{
-                        return(<PostContainer key={index}>
-                            <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
-                            <PostInfo>
-                                <TopLine>
-                                    <Username>{f.name}</Username>
-                                    { (f.post_owner == userId) && <ButtonBox>
-                                        <button onClick={()=> console.log('alterar')}>
-                                            <img src={pencil} alt="Edit"/>
-                                        </button>
-                                        <button onClick={()=> handleModal(f.post_id)}>
-                                            <img src={trashCan} alt="Delete"/>
-                                        </button>
-                                    </ButtonBox>}
-                                </TopLine>
-                                <PostDescription>{f.description}</PostDescription>
-                                <Metadata href={f.shared_link} target="_blank">
-                                    <LinkInfo>
-                                        <LinkTitle>{f.link_title}</LinkTitle>
-                                        <LinkDescription>{f.link_description}</LinkDescription>
-                                        <LinkURL>{f.shared_link}</LinkURL>
-                                    </LinkInfo>
-                                    <LinkImage src={f.link_image}></LinkImage>
-                                </Metadata>
-                            </PostInfo>
-                        </PostContainer>
-                        )}
-                    )
+                    feed.map((f, index) => {
+                        return (
+                            <PostContainer key={index}>
+                                <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                <PostInfo>
+                                    <TopLine>
+                                        <Username>{f.name}</Username>
+                                        {(f.post_owner === Number(userId)) && <ButtonBox>
+                                            <button onClick={() => console.log('alterar')}>
+                                                <img src={pencil} alt="Edit" />
+                                            </button>
+                                            <button onClick={() => handleModal(f.post_id)}>
+                                                <img src={trashCan} alt="Delete" />
+                                            </button>
+                                        </ButtonBox>}
+                                        <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
+                                    </TopLine>
+                                    <PostDescription>
+                                        {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                            <Link to ={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                        ))}
+                                    </PostDescription>
+                                    <Metadata href={f.shared_link} target="_blank">
+                                        <LinkInfo>
+                                            <LinkTitle>{f.link_title}</LinkTitle>
+                                            <LinkDescription>{f.link_description}</LinkDescription>
+                                            <LinkURL>{f.shared_link}</LinkURL>
+                                        </LinkInfo>
+                                        <LinkImage src={f.link_image}></LinkImage>
+                                    </Metadata>
+                                </PostInfo>
+                            </PostContainer>
+
+                        )
+                    })
                 }
             </FeedContainer>
-            <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
+            <TrendingsContainer>
+                <TrendTitle>
+                    trending
+                </TrendTitle>
+                {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                    trending.map((h) =>
+                        <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)}>
+                            {h.name}
+                        </TrendHashtags>
+                    )}
+            </TrendingsContainer>
+            <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
         </TimelinePageContainer>
     )
 }
@@ -143,6 +163,7 @@ const TimelinePageContainer = styled.div`
     width: 100%;
     min-height: 100%;
     background-color: #333333;
+    gap: 25px;
 `
 
 const FeedContainer = styled.div`
@@ -151,6 +172,40 @@ const FeedContainer = styled.div`
     align-items: center;
     max-width: 611px;
     margin-top: 72px;
+`
+
+const TrendingsContainer = styled.div`
+    max-width: 300px;
+    height: 405px;
+    background-color: #171717;
+    margin-top: 257px;
+    border-radius: 16px;
+`
+
+const TrendTitle = styled.div`
+    font-family: 'Oswald';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 27px;
+    line-height: 60px;
+    color: #FFFFFF;
+    padding-left: 15px;
+    border-bottom: 1px solid #484848;
+    margin-bottom: 22px;
+`
+
+const TrendHashtags = styled.div`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 24px;
+    color: #FFFFFF;
+    padding-left: 15px;
+    margin: 5px 0 ;
+    :hover {
+        cursor:pointer;
+    }
 `
 
 const Title = styled.div`
@@ -284,6 +339,14 @@ const PostDescription = styled.p`
     align-self: flex-start;
     word-wrap: break-word;
     text-align: left;
+    a {
+        font-weight: 700; 
+        text-decoration: none;
+        color: #FFFFFF;
+    }
+    a:hover{
+        cursor: pointer;
+    }
 `
 
 const Metadata = styled.a`
@@ -297,11 +360,15 @@ const Metadata = styled.a`
 `
 
 const LinkInfo = styled.div`
-    max-width:302px;
-    padding: 23px 20px;
-    display:flex;
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    max-width: 302px;
+    padding: 20px 20px;
+    display: flex;
     flex-direction: column;
     word-wrap: break-word;
+    gap: 4px;
 `
 
 const LinkTitle = styled.h1`
@@ -309,9 +376,11 @@ const LinkTitle = styled.h1`
     font-style: normal;
     font-weight: 400;
     font-size: 16px;
-    line-height: 19px;
+    line-height: 18px;
+    height: 36px;
     color: #CECECE;
-    margin-bottom:5px;
+    word-wrap: break-word;
+    overflow: hidden;
 `
 
 const LinkDescription = styled.p`
@@ -319,9 +388,11 @@ const LinkDescription = styled.p`
     font-style: normal;
     font-weight: 400;
     font-size: 11px;
-    line-height: 13px;
+    line-height: 12.5px;
+    height: 38px;
     color: #9B9595;
-    margin-bottom: 13px;
+    word-wrap: break-word;
+    overflow: hidden;
 `
 
 const LinkURL = styled.p`
@@ -329,8 +400,11 @@ const LinkURL = styled.p`
     font-style: normal;
     font-weight: 400;
     font-size: 11px;
-    line-height: 13px;
+    line-height: 14px;
+    height: 28px;
     color: #CECECE;
+    word-wrap: break-word;
+    overflow: hidden;
 `
 
 const LinkImage = styled.img`

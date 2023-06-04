@@ -20,7 +20,7 @@ export function ImgProvider({ children }) {
                 setUserProfileImage(() => avatarUrl)
             }
         })()
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     return (<imgContext.Provider value={{ userProfileImage }}>
         {children}

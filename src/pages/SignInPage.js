@@ -42,36 +42,38 @@ export default function SignInPage() {
           navigate("/timeline")
         }
       } catch (e) {
-
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     })()
-  }, [])
-  return (<SignInPageContainer>
-    <TitleContainer>
-      <Title>linkr</Title>
-      <SubTitle>save, share and discover<br /> the best links on the web</SubTitle>
-    </TitleContainer>
-    <FormContainer onSubmit={handleSignIn}>
-      <Input
-        placeholder={"e-mail"}
-        name="email"
-        type="email"
-        required
-        value={form.email}
-        onChange={handleForm}
-      />
-      <Input
-        placeholder={"password"}
-        name="password"
-        type="password"
-        required
-        value={form.password}
-        onChange={handleForm}
-      />
-      <Button disabled={disabled}>Log In</Button>
-      <Link to={'/signup'}> First time? Create and account! </Link>
-    </FormContainer>
-  </SignInPageContainer>
+  }, [navigate])
+
+  return (
+    <SignInPageContainer>
+      <TitleContainer>
+        <Title>linkr</Title>
+        <SubTitle>save, share and discover<br /> the best links on the web</SubTitle>
+      </TitleContainer>
+      <FormContainer onSubmit={handleSignIn}>
+        <Input
+          placeholder={"e-mail"}
+          name="email"
+          type="email"
+          required
+          value={form.email}
+          onChange={handleForm}
+        />
+        <Input
+          placeholder={"password"}
+          name="password"
+          type="password"
+          required
+          value={form.password}
+          onChange={handleForm}
+        />
+        <Button disabled={disabled}>Log In</Button>
+        <Link to={'/signup'}> First time? Create and account! </Link>
+      </FormContainer>
+    </SignInPageContainer>
   );
 }
 
