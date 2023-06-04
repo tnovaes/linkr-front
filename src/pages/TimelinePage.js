@@ -178,7 +178,8 @@ const TrendingsContainer = styled.div`
     height: 405px;
     background-color: #171717;
     margin-top: 257px;
-    border-radius: 16px;    
+    border-radius: 16px;
+    gap: 25px;
 `
 
 const TrendTitle = styled.div`
