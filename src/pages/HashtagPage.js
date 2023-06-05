@@ -12,7 +12,6 @@ export default function HashtagPage() {
     const [trending, setTrending] = useState([]);
     const [carregando, setCarregando] = useState(false);
     const navigate = useNavigate();
-    console.log(feed)
     useEffect(() => {
         setCarregando(true);
         const token = localStorage.getItem("token");

@@ -24,8 +24,9 @@ export default function TimelinePage() {
     const [postIndex, setpostIndex] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
     const [editDescription, setEditDescription] = useState("")
+    const [oldFeed, setOldFeed] = useState([])
+    const [likesInfo, setLikesInfo] = useState(false)
     const navigate = useNavigate();
-    console.log(feed)
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
@@ -33,7 +34,6 @@ export default function TimelinePage() {
     ])
 
     const { userProfileImage } = usePhoto();
-
     const toggleEditing = (Index, descrip, id) => {
         setpostIndex(Index);
         setSelectedPost(id)
@@ -100,149 +100,212 @@ export default function TimelinePage() {
                 setDisabled(false);
             });
     }
-
-    function handlePost(e) {
-        e.preventDefault();
-        setDisabled(true);
-
-        if (!form.shared_link) return alert("Link input must be filled");
-
-        const token = localStorage.getItem("token");
-
-        apiPosts.publishPost(form, token)
-            .then(res => {
-                setForm({ shared_link: "", description: "" });
-                setDisabled(false);
-                setReload(!reload);
-            })
-            .catch(err => {
-                alert("There was an error publishing your link")
-                console.log(err.response.data);
-                setDisabled(false);
-            });
-    }
-
-    function handleModal(postId) {
-        setSelectedPost(postId)
-        setOpenModal(true)
-    }
-    async function handleLike(post_id) {
-        try {
-            const token = localStorage.getItem('token')
-            apiPosts.toggleLike(token, post_id)
-            const newFeed = feed.map(item => {
-                if (post_id === item.post_id) {
-                    item.isLiked ? --item.likes: ++item.likes
-                    item.isLiked = !item.isLiked
+    async function handleLikeHover(post_id) {
+        const token = localStorage.getItem("token")
+        let newFeed = [...feed]
+        let newLikesInfo = [];
+        if (likesInfo === false) {
+            if (oldFeed.length === 0) {
+                setOldFeed(newFeed)
+            }
+            setLikesInfo(true)
+            newLikesInfo = await apiPosts.getPostsLikesInfo(token, post_id)
+            let names = []
+            if (newLikesInfo.data.length === 0) {
+                return;
+            } else if (newLikesInfo.data.length > 1) {
+                for (let i = 0; i < newLikesInfo.data.length; i++) {
+                    if (newLikesInfo.data[i].post_id !== post_id) {
+                        names.push(newLikesInfo.data[i])
+                    }
+                    if (names.length > 2) {
+                        break;
+                    }
                 }
-                return item
+            } else if (newLikesInfo.data.length === 1 && newLikesInfo.data[0].post_id !== post_id) {
+                names.push(newLikesInfo.data[0])
+            }
+            console.log(newLikesInfo)
+            newFeed = newFeed.map(post => {
+                const isPostTheHovered = post.post_id === post_id
+                const isLikedByUser = post.isLiked === true
+                if (isPostTheHovered) {
+                    const likesQuantity = newLikesInfo.data.length
+                    if (isLikedByUser) {
+                        if (likesQuantity > 2) {
+                            return { ...post, likesInfo: `Você, ${names[0].name} e outras ${newLikesInfo.length - 2} pessoas` }
+                        } else if (likesQuantity === 2) {
+                            return { ...post, likesInfo: `Você e ${names[0].name} curtiram..` }
+                        } else if (likesQuantity === 1) {
+                            return { ...post, likesInfo: `Você curtiu..` }
+                        }
+                    }
+                    else {
+                        if (likesQuantity === 1) {
+                            return { ...post, likesInfo: `${names[0].name} curtiu..` }
+                        } else if (likesQuantity === 2) {
+                            return { ...post, likesInfo: `${names[0].name} e ${names[1].name} curtiram...` }
+                        } else if (likesQuantity > 2) {
+                            return { ...post, likesInfo: `${names[0].name}, ${names[1].name} e outras ${newLikesInfo.length - 2} pessoas` }
+                        }
+                    }
+                }
+                return post
             })
-
-            setFeed(prev => newFeed)
-        } catch (e) {
         }
+        setFeed(newFeed)
     }
-    return (
-        <TimelinePageContainer>
-            <FeedContainer>
-                <Title>timeline</Title>
-                <SharePostContainer>
-                    <ImageContainer>
-                        <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
-                    </ImageContainer>
-                    <PostForm onSubmit={handlePost}>
-                        <CTA>What are you going to share today?</CTA>
-                        <LinkInput
-                            placeholder="http://..."
-                            name="shared_link"
-                            type="url"
-                            required
-                            value={form.shared_link}
-                            onChange={handleForm}
-                            disabled={disabled}
-                        ></LinkInput>
-                        <DescriptionInput
-                            placeholder="Awesome link about your #passion"
-                            name="description"
-                            type="text"
-                            value={form.description}
-                            onChange={handleForm}
-                            disabled={disabled}
-                        ></DescriptionInput>
-                        <Button type="submit" disabled={disabled}>{disabled ? "Publishing..." : "Publish"}</Button>
-                    </PostForm>
-                </SharePostContainer>
-                {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                    feed.map((f, index) => {
-                        return (
-                            <PostContainer key={f.post_id}>
-                                <ImageLikeContainer>
-                                    <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
-                                    <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart:heart} alt="heart" />
-                                    <p>{f.likes} Likes</p>
-                                </ImageLikeContainer>
-                                <PostInfo>
-                                    <TopLine>
-                                        <Link to={`/user/${f.post_owner}`}>
-                                            <Username>{f.name}</Username>
-                                        </Link>
-                                        {(f.post_owner === Number(userId)) && <ButtonBox>
-                                            <button onClick={() => toggleEditing(index, f.description, f.post_id)}>
-                                                <img src={pencil} alt="Edit" />
-                                            </button>
-                                            <button onClick={() => handleModal(f.post_id)}>
-                                                <img src={trashCan} alt="Delete" />
-                                            </button>
-                                        </ButtonBox>}
-                                        <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
-                                    </TopLine>
-                                    {(isEditing && index == postIndex) ?
-                                        <EditForm onSubmit={handleEditPost}>
-                                            <input
-                                                ref={refs.current[index]}
-                                                value={editDescription}
-                                                onChange={(e) => setEditDescription(e.target.value)}
-                                                onKeyDown={(e) => handleExit(e.key)}
-                                                disabled={disabled}
-                                            />
-                                        </EditForm> :
-                                        <PostDescription>
 
-                                            {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
-                                                <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
-                                            ))}
-                                        </PostDescription>}
+async function handleLikeHoverLeaving() {
+    setFeed(prev => [...oldFeed])
+    setLikesInfo(false)
+}
+function handlePost(e) {
+    e.preventDefault();
+    setDisabled(true);
+
+    if (!form.shared_link) return alert("Link input must be filled");
+
+    const token = localStorage.getItem("token");
+
+    apiPosts.publishPost(form, token)
+        .then(res => {
+            setForm({ shared_link: "", description: "" });
+            setDisabled(false);
+            setReload(!reload);
+        })
+        .catch(err => {
+            alert("There was an error publishing your link")
+            console.log(err.response.data);
+            setDisabled(false);
+        });
+}
+
+function handleModal(postId) {
+    setSelectedPost(postId)
+    setOpenModal(true)
+}
+async function handleLike(post_id) {
+    try {
+        const token = localStorage.getItem('token')
+        apiPosts.toggleLike(token, post_id)
+        const newFeed = feed.map(item => {
+            if (post_id === item.post_id) {
+                item.isLiked ? --item.likes : ++item.likes
+                item.isLiked = !item.isLiked
+            }
+            return item
+        })
+
+        setFeed(prev => newFeed)
+    } catch (e) {
+    }
+}
+return (
+    <TimelinePageContainer>
+        <FeedContainer>
+            <Title>timeline</Title>
+            <SharePostContainer>
+                <ImageContainer>
+                    <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
+                </ImageContainer>
+                <PostForm onSubmit={handlePost}>
+                    <CTA>What are you going to share today?</CTA>
+                    <LinkInput
+                        placeholder="http://..."
+                        name="shared_link"
+                        type="url"
+                        required
+                        value={form.shared_link}
+                        onChange={handleForm}
+                        disabled={disabled}
+                    ></LinkInput>
+                    <DescriptionInput
+                        placeholder="Awesome link about your #passion"
+                        name="description"
+                        type="text"
+                        value={form.description}
+                        onChange={handleForm}
+                        disabled={disabled}
+                    ></DescriptionInput>
+                    <Button type="submit" disabled={disabled}>{disabled ? "Publishing..." : "Publish"}</Button>
+                </PostForm>
+            </SharePostContainer>
+            {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                feed.map((f, index) => {
+                    return (
+                        <PostContainer key={f.post_id}>
+                            <ImageLikeContainer>
+                                <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" />
+                                <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)}>{f.likes} Likes</p>
+                                {likesInfo && f.likesInfo?.length > 0 && (<div>
+                                    <div></div>
+                                    <p>{f.likesInfo}</p>
+                                </div>)}
+                            </ImageLikeContainer>
+                            <PostInfo>
+                                <TopLine>
+                                    <Link to={`/user/${f.post_owner}`}>
+                                        <Username>{f.name}</Username>
+                                    </Link>
+                                    {(f.post_owner === Number(userId)) && <ButtonBox>
+                                        <button onClick={() => toggleEditing(index, f.description, f.post_id)}>
+                                            <img src={pencil} alt="Edit" />
+                                        </button>
+                                        <button onClick={() => handleModal(f.post_id)}>
+                                            <img src={trashCan} alt="Delete" />
+                                        </button>
+                                    </ButtonBox>}
+                                    <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
+                                </TopLine>
+                                {(isEditing && index == postIndex) ?
+                                    <EditForm onSubmit={handleEditPost}>
+                                        <input
+                                            ref={refs.current[index]}
+                                            value={editDescription}
+                                            onChange={(e) => setEditDescription(e.target.value)}
+                                            onKeyDown={(e) => handleExit(e.key)}
+                                            disabled={disabled}
+                                        />
+                                    </EditForm> :
+                                    <PostDescription>
+
+                                        {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                            <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                        ))}
+                                    </PostDescription>}
 
 
-                                    <Metadata href={f.shared_link} target="_blank">
-                                        <LinkInfo>
-                                            <LinkTitle>{f.link_title}</LinkTitle>
-                                            <LinkDescription>{f.link_description}</LinkDescription>
-                                            <LinkURL>{f.shared_link}</LinkURL>
-                                        </LinkInfo>
-                                        <LinkImage src={f.link_image}></LinkImage>
-                                    </Metadata>
-                                </PostInfo>
-                            </PostContainer>
+                                <Metadata href={f.shared_link} target="_blank">
+                                    <LinkInfo>
+                                        <LinkTitle>{f.link_title}</LinkTitle>
+                                        <LinkDescription>{f.link_description}</LinkDescription>
+                                        <LinkURL>{f.shared_link}</LinkURL>
+                                    </LinkInfo>
+                                    <LinkImage src={f.link_image}></LinkImage>
+                                </Metadata>
+                            </PostInfo>
+                        </PostContainer>
 
-                        )
-                    })
-                }
-            </FeedContainer>
-            <TrendingsContainer>
-                <TrendTitle>
-                    trending
-                </TrendTitle>
-                {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                    trending.map((h) =>
-                        <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)}>
-                            {h.name}
-                        </TrendHashtags>
-                    )}
-            </TrendingsContainer>
-            <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
-        </TimelinePageContainer>
-    )
+                    )
+                })
+            }
+        </FeedContainer>
+        <TrendingsContainer>
+            <TrendTitle>
+                trending
+            </TrendTitle>
+            {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                trending.map((h) =>
+                    <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)}>
+                        {h.name}
+                    </TrendHashtags>
+                )}
+        </TrendingsContainer>
+        <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
+    </TimelinePageContainer>
+)
 }
 
 
@@ -260,6 +323,7 @@ font-weight: 400;
 font-size: 11px;
 line-height: 13px;
 text-align: center;
+margin-bottom:1px;
 }
 img {
     margin-bottom:4px;
@@ -270,13 +334,41 @@ img:first-child {
 img:nth-child(2) {
     cursor:pointer;
 }
-
+>div:last-child{
+    max-width:180px;
+    width:fit-content;
+    height:30px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    border-radius: 3px;
+    div:first-child{
+        width: 0px !important;
+        height: 0px !important;
+        border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 9px solid rgba(255, 255, 255, 0.9);
+}
+p {
+    width:fit-content;
+    color:#505050;
+    font-family: 'Lato';
+    font-weight: 700;
+    font-size: 11px;
+    line-height: 13px;
+    background: rgba(255,255,255,0.9);
+    word-break:keep-all;
+    white-space:nowrap;
+    padding:6px;
+    border-radius:3px;
+    }
+}
+`
 const ImageContainer = styled.div`
     @media (max-width: 611px) {
         display: none;
     }
 `
-
 const TimelinePageContainer = styled.div`
     display:flex;
     justify-content:center;
