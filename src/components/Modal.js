@@ -15,7 +15,6 @@ export default function Modal({ isOpen, closeModal, token, post_id }) {
         try {
             setLoad(true)
             const promisse = await apiPosts.deletePostByID(token,id);
-            console.log(promisse)
             if (promisse.status === 200) {
                 setLoad(false)
                 navigate(0)
