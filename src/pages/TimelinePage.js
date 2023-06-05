@@ -34,7 +34,6 @@ export default function TimelinePage() {
     ])
 
     const { userProfileImage } = usePhoto();
-
     const toggleEditing = (Index, descrip, id) => {
         setpostIndex(Index);
         setSelectedPost(id)
@@ -126,183 +125,187 @@ export default function TimelinePage() {
             } else if (newLikesInfo.data.length === 1 && newLikesInfo.data[0].post_id !== post_id) {
                 names.push(newLikesInfo.data[0])
             }
+            console.log(newLikesInfo)
             newFeed = newFeed.map(post => {
                 const isPostTheHovered = post.post_id === post_id
                 const isLikedByUser = post.isLiked === true
                 if (isPostTheHovered) {
+                    const likesQuantity = newLikesInfo.data.length
                     if (isLikedByUser) {
-                        const likesQuantity = newLikesInfo.data.length
                         if (likesQuantity > 2) {
-                            return { ...post, likesInfo: `Você, ${names[0]} e outras ${newLikesInfo.length - 2} pessoas` }
+                            return { ...post, likesInfo: `Você, ${names[0].name} e outras ${newLikesInfo.length - 2} pessoas` }
                         } else if (likesQuantity === 2) {
-                            return { ...post, likesInfo: `Você e ${names[0]} curtiram..` }
+                            return { ...post, likesInfo: `Você e ${names[0].name} curtiram..` }
                         } else if (likesQuantity === 1) {
                             return { ...post, likesInfo: `Você curtiu..` }
-                        } else if (likesQuantity === 1) {
-                            return { ...post, likesInfo: `${names[0]} curtiu..` }
+                        }
+                    }
+                    else {
+                        if (likesQuantity === 1) {
+                            return { ...post, likesInfo: `${names[0].name} curtiu..` }
                         } else if (likesQuantity === 2) {
-                            return { ...post, likesInfo: `${names[0]} e ${names[1]} curtiram...` }
+                            return { ...post, likesInfo: `${names[0].name} e ${names[1].name} curtiram...` }
                         } else if (likesQuantity > 2) {
-                            return { ...post, likesInfo: `${names[0]}, ${names[1]} e outras ${newLikesInfo.length - 2} pessoas` }
+                            return { ...post, likesInfo: `${names[0].name}, ${names[1].name} e outras ${newLikesInfo.length - 2} pessoas` }
                         }
                     }
                 }
                 return post
             })
-            setFeed(newFeed)
         }
-
-    }
-    async function handleLikeHoverLeaving() {
-        setFeed(prev => [...oldFeed])
-        setLikesInfo(false)
-    }
-    function handlePost(e) {
-        e.preventDefault();
-        setDisabled(true);
-
-        if (!form.shared_link) return alert("Link input must be filled");
-
-        const token = localStorage.getItem("token");
-
-        apiPosts.publishPost(form, token)
-            .then(res => {
-                setForm({ shared_link: "", description: "" });
-                setDisabled(false);
-                setReload(!reload);
-            })
-            .catch(err => {
-                alert("There was an error publishing your link")
-                console.log(err.response.data);
-                setDisabled(false);
-            });
+        setFeed(newFeed)
     }
 
-    function handleModal(postId) {
-        setSelectedPost(postId)
-        setOpenModal(true)
-    }
-    async function handleLike(post_id) {
-        try {
-            const token = localStorage.getItem('token')
-            apiPosts.toggleLike(token, post_id)
-            const newFeed = feed.map(item => {
-                if (post_id === item.post_id) {
-                    item.isLiked ? --item.likes: ++item.likes
-                    item.isLiked = !item.isLiked
-                }
-                return item
-            })
+async function handleLikeHoverLeaving() {
+    setFeed(prev => [...oldFeed])
+    setLikesInfo(false)
+}
+function handlePost(e) {
+    e.preventDefault();
+    setDisabled(true);
 
-            setFeed(prev => newFeed)
-        } catch (e) {
-        }
+    if (!form.shared_link) return alert("Link input must be filled");
+
+    const token = localStorage.getItem("token");
+
+    apiPosts.publishPost(form, token)
+        .then(res => {
+            setForm({ shared_link: "", description: "" });
+            setDisabled(false);
+            setReload(!reload);
+        })
+        .catch(err => {
+            alert("There was an error publishing your link")
+            console.log(err.response.data);
+            setDisabled(false);
+        });
+}
+
+function handleModal(postId) {
+    setSelectedPost(postId)
+    setOpenModal(true)
+}
+async function handleLike(post_id) {
+    try {
+        const token = localStorage.getItem('token')
+        apiPosts.toggleLike(token, post_id)
+        const newFeed = feed.map(item => {
+            if (post_id === item.post_id) {
+                item.isLiked ? --item.likes : ++item.likes
+                item.isLiked = !item.isLiked
+            }
+            return item
+        })
+
+        setFeed(prev => newFeed)
+    } catch (e) {
     }
-    return (
-        <TimelinePageContainer>
-            <FeedContainer>
-                <Title>timeline</Title>
-                <SharePostContainer>
-                    <ImageContainer>
-                        <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
-                    </ImageContainer>
-                    <PostForm onSubmit={handlePost}>
-                        <CTA>What are you going to share today?</CTA>
-                        <LinkInput
-                            placeholder="http://..."
-                            name="shared_link"
-                            type="url"
-                            required
-                            value={form.shared_link}
-                            onChange={handleForm}
-                            disabled={disabled}
-                        ></LinkInput>
-                        <DescriptionInput
-                            placeholder="Awesome link about your #passion"
-                            name="description"
-                            type="text"
-                            value={form.description}
-                            onChange={handleForm}
-                            disabled={disabled}
-                        ></DescriptionInput>
-                        <Button type="submit" disabled={disabled}>{disabled ? "Publishing..." : "Publish"}</Button>
-                    </PostForm>
-                </SharePostContainer>
-                {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                    feed.map((f, index) => {
-                        return (
-                            <PostContainer key={f.post_id}>
-                                <ImageLikeContainer>
-                                    <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
-                                    <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" />
+}
+return (
+    <TimelinePageContainer>
+        <FeedContainer>
+            <Title>timeline</Title>
+            <SharePostContainer>
+                <ImageContainer>
+                    <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
+                </ImageContainer>
+                <PostForm onSubmit={handlePost}>
+                    <CTA>What are you going to share today?</CTA>
+                    <LinkInput
+                        placeholder="http://..."
+                        name="shared_link"
+                        type="url"
+                        required
+                        value={form.shared_link}
+                        onChange={handleForm}
+                        disabled={disabled}
+                    ></LinkInput>
+                    <DescriptionInput
+                        placeholder="Awesome link about your #passion"
+                        name="description"
+                        type="text"
+                        value={form.description}
+                        onChange={handleForm}
+                        disabled={disabled}
+                    ></DescriptionInput>
+                    <Button type="submit" disabled={disabled}>{disabled ? "Publishing..." : "Publish"}</Button>
+                </PostForm>
+            </SharePostContainer>
+            {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                feed.map((f, index) => {
+                    return (
+                        <PostContainer key={f.post_id}>
+                            <ImageLikeContainer>
+                                <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" />
                                 <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)}>{f.likes} Likes</p>
                                 {likesInfo && f.likesInfo?.length > 0 && (<div>
                                     <div></div>
                                     <p>{f.likesInfo}</p>
                                 </div>)}
-                                </ImageLikeContainer>
-                                <PostInfo>
-                                    <TopLine>
-                                        <Link to={`/user/${f.post_owner}`}>
-                                            <Username>{f.name}</Username>
-                                        </Link>
-                                        {(f.post_owner === Number(userId)) && <ButtonBox>
-                                            <button onClick={() => toggleEditing(index, f.description, f.post_id)}>
-                                                <img src={pencil} alt="Edit" />
-                                            </button>
-                                            <button onClick={() => handleModal(f.post_id)}>
-                                                <img src={trashCan} alt="Delete" />
-                                            </button>
-                                        </ButtonBox>}
-                                        <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
-                                    </TopLine>
-                                    {(isEditing && index == postIndex) ?
-                                        <EditForm onSubmit={handleEditPost}>
-                                            <input
-                                                ref={refs.current[index]}
-                                                value={editDescription}
-                                                onChange={(e) => setEditDescription(e.target.value)}
-                                                onKeyDown={(e) => handleExit(e.key)}
-                                                disabled={disabled}
-                                            />
-                                        </EditForm> :
-                                        <PostDescription>
+                            </ImageLikeContainer>
+                            <PostInfo>
+                                <TopLine>
+                                    <Link to={`/user/${f.post_owner}`}>
+                                        <Username>{f.name}</Username>
+                                    </Link>
+                                    {(f.post_owner === Number(userId)) && <ButtonBox>
+                                        <button onClick={() => toggleEditing(index, f.description, f.post_id)}>
+                                            <img src={pencil} alt="Edit" />
+                                        </button>
+                                        <button onClick={() => handleModal(f.post_id)}>
+                                            <img src={trashCan} alt="Delete" />
+                                        </button>
+                                    </ButtonBox>}
+                                    <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
+                                </TopLine>
+                                {(isEditing && index == postIndex) ?
+                                    <EditForm onSubmit={handleEditPost}>
+                                        <input
+                                            ref={refs.current[index]}
+                                            value={editDescription}
+                                            onChange={(e) => setEditDescription(e.target.value)}
+                                            onKeyDown={(e) => handleExit(e.key)}
+                                            disabled={disabled}
+                                        />
+                                    </EditForm> :
+                                    <PostDescription>
 
-                                            {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
-                                                <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
-                                            ))}
-                                        </PostDescription>}
+                                        {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                            <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                        ))}
+                                    </PostDescription>}
 
 
-                                    <Metadata href={f.shared_link} target="_blank">
-                                        <LinkInfo>
-                                            <LinkTitle>{f.link_title}</LinkTitle>
-                                            <LinkDescription>{f.link_description}</LinkDescription>
-                                            <LinkURL>{f.shared_link}</LinkURL>
-                                        </LinkInfo>
-                                        <LinkImage src={f.link_image}></LinkImage>
-                                    </Metadata>
-                                </PostInfo>
-                            </PostContainer>
+                                <Metadata href={f.shared_link} target="_blank">
+                                    <LinkInfo>
+                                        <LinkTitle>{f.link_title}</LinkTitle>
+                                        <LinkDescription>{f.link_description}</LinkDescription>
+                                        <LinkURL>{f.shared_link}</LinkURL>
+                                    </LinkInfo>
+                                    <LinkImage src={f.link_image}></LinkImage>
+                                </Metadata>
+                            </PostInfo>
+                        </PostContainer>
 
-                        )
-                    })
-                }
-            </FeedContainer>
-            <TrendingsContainer>
-                <TrendTitle>
-                    trending
-                </TrendTitle>
-                {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                    trending.map((h) =>
-                        <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)}>
-                            {h.name}
-                        </TrendHashtags>
-                    )}
-            </TrendingsContainer>
-            <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
-        </TimelinePageContainer>
-    )
+                    )
+                })
+            }
+        </FeedContainer>
+        <TrendingsContainer>
+            <TrendTitle>
+                trending
+            </TrendTitle>
+            {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                trending.map((h) =>
+                    <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)}>
+                        {h.name}
+                    </TrendHashtags>
+                )}
+        </TrendingsContainer>
+        <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
+    </TimelinePageContainer>
+)
 }
 
 
