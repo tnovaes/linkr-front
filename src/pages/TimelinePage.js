@@ -23,11 +23,13 @@ export default function TimelinePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [editDescription, setEditDescription] = useState("")
     const navigate = useNavigate();
+
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef()
     ])
+    
     const { userProfileImage } = usePhoto();
 
     const toggleEditing = (Index, descrip, id) => {
