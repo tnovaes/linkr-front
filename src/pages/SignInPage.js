@@ -93,7 +93,7 @@ font-weight: 400;
 font-size: 17px;
 line-height: 20px;
 text-decoration-line: underline;
-margin: 21px auto 0 auto;
+margin: 21px auto 30px auto;
 width:fit-content;
 }
 *{
