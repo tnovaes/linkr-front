@@ -12,7 +12,7 @@ export default function HashtagPage() {
     const [trending, setTrending] = useState([]);
     const [carregando, setCarregando] = useState(false);
     const navigate = useNavigate();
-
+    console.log(feed)
     useEffect(() => {
         setCarregando(true);
         const token = localStorage.getItem("token");
@@ -39,7 +39,9 @@ export default function HashtagPage() {
                             <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                             <PostInfo>
                                 <TopLine>
-                                    <Username>{f.name}</Username>
+                                    <Link to={`/user/${f.post_owner}`}>
+                                        <Username>{f.name}</Username>
+                                    </Link>
                                 </TopLine>
                                 <PostDescription>
                                     {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
@@ -134,6 +136,9 @@ const PostContainer = styled.div`
 const TopLine = styled.div`
     display: flex;
     justify-content: space-between;
+    a {
+        text-decoration: none;
+    }
 `
 
 const Username = styled.h1`
@@ -144,6 +149,12 @@ const Username = styled.h1`
     line-height: 23px;
     color: #FFFFFF;
     align-self: flex-start;
+    a {
+        text-decoration: none;
+    }
+    a:visited {
+    color: #FFFFFF;
+    }
 `
 
 const PostDescription = styled.p`
