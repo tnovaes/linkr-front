@@ -29,7 +29,7 @@ export default function TimelinePage() {
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef()
     ])
-    
+
     const { userProfileImage } = usePhoto();
 
     const toggleEditing = (Index, descrip, id) => {
@@ -49,7 +49,7 @@ export default function TimelinePage() {
         if (isEditing) {
             refs.current[postIndex].current.focus();
         }
-    }, [isEditing]);
+    }, [isEditing, postIndex]);
 
 
     useEffect(() => {
@@ -74,7 +74,7 @@ export default function TimelinePage() {
                 alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
-    }, [reload])
+    }, [reload, navigate])
 
     function handleForm(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -129,7 +129,9 @@ export default function TimelinePage() {
             <FeedContainer>
                 <Title>timeline</Title>
                 <SharePostContainer>
-                    <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
+                    <ImageContainer>
+                        <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
+                    </ImageContainer>
                     <PostForm onSubmit={handlePost}>
                         <CTA>What are you going to share today?</CTA>
                         <LinkInput
@@ -173,21 +175,21 @@ export default function TimelinePage() {
                                         <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
                                     </TopLine>
                                     {(isEditing && index == postIndex) ?
-                                    <EditForm onSubmit={handleEditPost}>
-                                        <input 
-                                        ref={refs.current[index]}
-                                        value={editDescription}
-                                        onChange={(e)=> setEditDescription(e.target.value)}
-                                        onKeyDown={(e)=> handleExit(e.key)}
-                                        disabled={disabled}
-                                        />
+                                        <EditForm onSubmit={handleEditPost}>
+                                            <input
+                                                ref={refs.current[index]}
+                                                value={editDescription}
+                                                onChange={(e) => setEditDescription(e.target.value)}
+                                                onKeyDown={(e) => handleExit(e.key)}
+                                                disabled={disabled}
+                                            />
                                         </EditForm> :
-                                    <PostDescription>
+                                        <PostDescription>
 
-                                    {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
-                                        <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
-                                    ))}
-                                </PostDescription>}
+                                            {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                                <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                            ))}
+                                        </PostDescription>}
 
 
                                     <Metadata href={f.shared_link} target="_blank">
@@ -221,6 +223,12 @@ export default function TimelinePage() {
     )
 }
 
+const ImageContainer = styled.div`
+    @media (max-width: 611px) {
+        display: none;
+    }
+`
+
 const TimelinePageContainer = styled.div`
     display:flex;
     justify-content:center;
@@ -228,6 +236,9 @@ const TimelinePageContainer = styled.div`
     min-height: 100%;
     background-color: #333333;
     gap: 25px;
+    @media (max-width: 936px) {
+        min-width: 100%;
+    }
 `
 
 const FeedContainer = styled.div`
@@ -236,6 +247,11 @@ const FeedContainer = styled.div`
     align-items: center;
     max-width: 611px;
     margin-top: 72px;
+    @media (max-width: 611px) {
+        min-width: 100%;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
 `
 
 const TrendingsContainer = styled.div`
@@ -244,6 +260,9 @@ const TrendingsContainer = styled.div`
     background-color: #171717;
     margin-top: 257px;
     border-radius: 16px;
+    @media (max-width: 936px) {
+    display: none;
+    }
 `
 
 const TrendTitle = styled.div`
@@ -281,6 +300,12 @@ const Title = styled.div`
     line-height: 64px;
     color: #FFFFFF;
     align-self: flex-start;
+    @media (max-width: 611px) {
+        margin-left: 15px;
+        margin-top: 80px;
+        font-size: 33px;
+        line-height: 48px;
+    }
 `
 
 const SharePostContainer = styled.div`
@@ -295,6 +320,13 @@ const SharePostContainer = styled.div`
     margin-bottom: 29px;
     padding: 16px;
     gap: 18px;
+    @media (max-width: 611px) {
+    border-radius: 0px;
+    padding: 15px;
+    margin: 0 15px;
+    width: 100%;
+    justify-content: center;
+    }
 `
 
 const PostForm = styled.form`
@@ -302,6 +334,9 @@ const PostForm = styled.form`
     flex-direction: column;
     max-width: 502px;
     gap:7px;
+    @media (max-width: 611px) {
+        max-width: 100%;
+    }
 `
 
 const PostInfo = styled.div`
@@ -309,6 +344,11 @@ const PostInfo = styled.div`
     flex-direction: column;
     max-width: 502px;
     gap:7px;
+    @media (max-width: 611px) {
+    border-radius: 0px;
+    margin: 0 7px;
+    max-width: 100%;
+    }
 `
 
 const CTA = styled.h1`
@@ -319,6 +359,9 @@ const CTA = styled.h1`
     line-height: 24px;
     color: #707070;
     align-self: flex-start;
+    @media (max-width: 611px) {
+        align-self: center;
+    }
 `
 
 const LinkInput = styled.input`
@@ -334,6 +377,9 @@ const LinkInput = styled.input`
     font-size: 15px;
     line-height: 18px;
     margin-top:10px;
+    @media (max-width: 611px) {
+        max-width: 100%;
+    }
 `
 
 const DescriptionInput = styled.input`
@@ -349,6 +395,9 @@ const DescriptionInput = styled.input`
     font-size: 15px;
     line-height: 18px;
     word-wrap: break-word;
+    @media (max-width: 611px) {
+        max-width: 100%;
+    }
 `
 
 const Button = styled.button`
@@ -381,6 +430,12 @@ const PostContainer = styled.div`
             visibility:visible;
         }
     }
+    @media (max-width: 611px) {
+    border-radius: 0px;
+    max-width: 100%;
+    justify-content: center;
+    margin: 0;
+    }
 `
 
 const Username = styled.h1`
@@ -399,7 +454,7 @@ const PostDescription = styled.p`
     font-style: normal;
     font-weight: 400;
     font-size: 17px;
-    line-height: 20px;
+    line-height: 24px;
     color: #B7B7B7;
     align-self: flex-start;
     word-wrap: break-word;
@@ -438,6 +493,16 @@ const Metadata = styled.a`
     border: 1px solid #4D4D4D;
     border-radius: 11px;
     text-decoration: none;
+    overflow: hidden;
+    @media (max-width: 611px) {
+        height: 115px;
+        padding: 2px;
+    }
+    @media (max-width: 375px) {
+        max-width: 278px;
+        height: 115px;
+        padding: 2px;
+    }
 `
 
 const LinkInfo = styled.div`
@@ -450,6 +515,15 @@ const LinkInfo = styled.div`
     flex-direction: column;
     word-wrap: break-word;
     gap: 4px;
+    @media (max-width: 611px) {
+        padding: 2px;
+        overflow: hidden;
+    }
+    @media (max-width: 375px) {
+        max-width: 175px;
+        padding: 2px;
+        overflow: hidden;
+    }
 `
 
 const LinkTitle = styled.h1`
@@ -462,6 +536,13 @@ const LinkTitle = styled.h1`
     color: #CECECE;
     word-wrap: break-word;
     overflow: hidden;
+    @media (max-width: 611px) {
+        padding: 2px;
+    }
+    @media (max-width: 375px) {
+        max-width: 175px;
+        padding: 2px;
+    }
 `
 
 const LinkDescription = styled.p`
@@ -474,6 +555,15 @@ const LinkDescription = styled.p`
     color: #9B9595;
     word-wrap: break-word;
     overflow: hidden;
+    @media (max-width: 611px) {
+        padding: 2px;
+        height: 26px;
+    }
+    @media (max-width: 375px) {
+        max-width: 175px;
+        padding: 2px;
+        height: 26px;
+    }
 `
 
 const LinkURL = styled.p`
@@ -486,12 +576,26 @@ const LinkURL = styled.p`
     color: #CECECE;
     word-wrap: break-word;
     overflow: hidden;
+    @media (max-width: 611px) {
+        padding: 2px;
+    }
+    @media (max-width: 375px) {
+        max-width: 175px;
+        padding: 2px;
+    }
 `
 
 const LinkImage = styled.img`
     max-width: 153px;
     max-height: 155px;
     object-fit: cover;
+    @media (max-width: 611px) {
+        max-height: 115px;
+    }
+    @media (max-width: 375px) {
+        max-width: 95px;
+        max-height: 115px;
+    }
 `
 
 const NoFeed = styled.div`

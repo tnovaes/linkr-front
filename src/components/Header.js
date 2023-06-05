@@ -166,7 +166,7 @@ const SearchPersonContainer = styled.div`
     position:fixed;
     top:13px;
     left: calc(50% - 285px);
-    max-width:570px;
+    max-width: 570px;
     background-color:#E7E7E7;
     border-radius: 8px;
     display: flex;
@@ -179,6 +179,21 @@ const SearchPersonContainer = styled.div`
     :focus {
         
     }
+    @media (max-width: 936px) {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    max-width: calc(100% - 30px);
+    height: 65px;
+    background-color:#333333;
+    padding: 10px 15px;
+    border-radius: 0;
+    border: none;
+    margin: 0;
+    }
+    @media (max-width: 375px) {
+    max-width: 375px;
+    }
 `
 const SearchPersonInput = styled.input`
     width:100%;
@@ -187,7 +202,7 @@ const SearchPersonInput = styled.input`
     font-weight: 400;
     font-size: 19px;
     line-height: 23px;
-    color:black;
+    color: black;
     border-radius: 8px;
     height:45px;
     padding-bottom:13px;
@@ -225,13 +240,21 @@ const HeaderContainer = styled.header`
     top:0;
     left:0;
     width:100%;
-    padding: 10px 17px 10px 28px;
+    padding: 10px 17px;
     img {
-        margin-left:10px;
+        margin-left: 20px;
     }
     a {
         text-decoration: none;
     }
+    @media (max-width: 936px) {
+    padding: 10px 30px;
+    max-width: calc(100% - 30px);
+    }
+    @media (max-width: 375px) {
+    max-width: 375px;
+    }
+
 `
 const Logo = styled.h1`
     font-family: 'Passion One';
@@ -245,6 +268,7 @@ const NavContainer = styled.nav`
     display:flex;
     align-items:center;
     position: relative;
+    width: 100px;
     img{
         cursor: pointer;
     }
