@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { ProfileImage } from "../components/ProfileImage.js";
 import { useNavigate, Link } from "react-router-dom";
 import apiPosts from "../services/apiPosts.js";
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
 import pencil from "../assets/pencil.svg";
@@ -19,8 +19,34 @@ export default function TimelinePage() {
     const [reload, setReload] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const [selectedPost, setSelectedPost] = useState(0);
+    const [postIndex, setpostIndex] = useState(0);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editDescription, setEditDescription] = useState("")
     const navigate = useNavigate();
+    const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
+    React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
+    React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
+    React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef()
+    ])
     const { userProfileImage } = usePhoto();
+    const toggleEditing = (Index, descrip, id) => {
+        setpostIndex(Index);
+        setSelectedPost(id)
+        setEditDescription(descrip)
+        setIsEditing(!isEditing);
+    };
+
+    function handleExit(chave) {
+        if (chave === 'Escape') {
+            setIsEditing(!isEditing);
+        }
+    }
+
+    useEffect(() => {
+        if (isEditing) {
+            refs.current[postIndex].current.focus();
+        }
+    }, [isEditing]);
 
     useEffect(() => {
         (async () => {
@@ -48,6 +74,24 @@ export default function TimelinePage() {
 
     function handleForm(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    function handleEditPost(e) {
+        e.preventDefault();
+        setDisabled(true);
+        const description = { description: editDescription }
+
+        apiPosts.postEdit(userToken, description, selectedPost)
+            .then(res => {
+                setDisabled(false)
+                setIsEditing(false)
+                setReload(!reload)
+            })
+            .catch(err => {
+                alert("There was an error publishing your edition")
+                console.log(err.response.data);
+                setDisabled(false);
+            });
     }
 
     function handlePost(e) {
@@ -113,7 +157,7 @@ export default function TimelinePage() {
                                     <TopLine>
                                         <Username>{f.name}</Username>
                                         {(f.post_owner === Number(userId)) && <ButtonBox>
-                                            <button onClick={() => console.log('alterar')}>
+                                            <button onClick={() => toggleEditing(index, f.description, f.post_id)}>
                                                 <img src={pencil} alt="Edit" />
                                             </button>
                                             <button onClick={() => handleModal(f.post_id)}>
@@ -122,11 +166,21 @@ export default function TimelinePage() {
                                         </ButtonBox>}
                                         <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
                                     </TopLine>
+                                    {(isEditing && index == postIndex) ?
+                                    <EditForm onSubmit={handleEditPost}>
+                                        <input 
+                                        ref={refs.current[index]}
+                                        value={editDescription}
+                                        onChange={(e)=> setEditDescription(e.target.value)}
+                                        onKeyDown={(e)=> handleExit(e.key)}
+                                        disabled={disabled}
+                                        />
+                                        </EditForm> :
                                     <PostDescription>
-                                        {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
-                                            <Link to ={`/hashtag/${match}`} key={match + i} >#{match}</Link>
-                                        ))}
-                                    </PostDescription>
+                                    {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                        <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                    ))}
+                                </PostDescription>}
                                     <Metadata href={f.shared_link} target="_blank">
                                         <LinkInfo>
                                             <LinkTitle>{f.link_title}</LinkTitle>
@@ -347,6 +401,22 @@ const PostDescription = styled.p`
     }
     a:hover{
         cursor: pointer;
+    }
+`
+
+const EditForm = styled.form`
+    width: 100%;
+    input{
+        width: 100%;
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 20px;
+    color: #B7B7B7;
+    align-self: flex-start;
+    word-wrap: break-word;
+    text-align: left;
     }
 `
 
