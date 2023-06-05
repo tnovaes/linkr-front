@@ -34,6 +34,11 @@ function toggleLike(token, post_id) {
 }
 
 
-const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID, getPostsByHashtag, postEdit, getLikes, toggleLike };
+function getPostsLikesInfo(token, post_id) {
+    return axios.get(`${BASE_URL}/likes/${post_id}`, { headers: { Authorization: token } })
+}
+
+
+const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID, getPostsByHashtag, postEdit, getLikes, toggleLike, getPostsLikesInfo };
 
 export default apiPosts;
