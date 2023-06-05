@@ -5,6 +5,8 @@ import apiPosts from "../services/apiPosts.js";
 import React, { useEffect, useRef, useState } from "react";
 import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
+import heart from "../assets/heart.png";
+import filledHeart from "../assets/filled-heart.png";
 import pencil from "../assets/pencil.svg";
 import Modal from "../components/Modal.js";
 import reactStringReplace from 'react-string-replace';
@@ -23,13 +25,13 @@ export default function TimelinePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [editDescription, setEditDescription] = useState("")
     const navigate = useNavigate();
-
+    console.log(feed)
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef()
     ])
-    
+
     const { userProfileImage } = usePhoto();
 
     const toggleEditing = (Index, descrip, id) => {
@@ -59,11 +61,12 @@ export default function TimelinePage() {
                 const idUser = localStorage.getItem("id");
                 if (!token) return navigate("/");
 
-                const timeline = await apiPosts.getTimeline(token);
+                const [timeline, likedPosts] = await Promise.all([apiPosts.getTimeline(token), apiPosts.getLikes(token)])
                 if (timeline.status === 204) {
                     alert("There are no posts yet");
                 } else {
-                    setFeed(timeline.data[0]);
+                    const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
+                    setFeed(timelineInfo);
                     setTrending(timeline.data[1]);
                     setUserId(idUser);
                     setUserToken(token);
@@ -123,7 +126,22 @@ export default function TimelinePage() {
         setSelectedPost(postId)
         setOpenModal(true)
     }
+    async function handleLike(post_id) {
+        try {
+            const token = localStorage.getItem('token')
+            apiPosts.toggleLike(token, post_id)
+            const newFeed = feed.map(item => {
+                if (post_id === item.post_id) {
+                    item.isLiked ? --item.likes: ++item.likes
+                    item.isLiked = !item.isLiked
+                }
+                return item
+            })
 
+            setFeed(prev => newFeed)
+        } catch (e) {
+        }
+    }
     return (
         <TimelinePageContainer>
             <FeedContainer>
@@ -155,8 +173,12 @@ export default function TimelinePage() {
                 {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
                     feed.map((f, index) => {
                         return (
-                            <PostContainer key={index}>
-                                <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                            <PostContainer key={f.post_id}>
+                                <ImageLikeContainer>
+                                    <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                    <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart:heart} alt="heart" />
+                                    <p>{f.likes} Likes</p>
+                                </ImageLikeContainer>
                                 <PostInfo>
                                     <TopLine>
                                         <Link to={`/user/${f.post_owner}`}>
@@ -173,21 +195,21 @@ export default function TimelinePage() {
                                         <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
                                     </TopLine>
                                     {(isEditing && index == postIndex) ?
-                                    <EditForm onSubmit={handleEditPost}>
-                                        <input 
-                                        ref={refs.current[index]}
-                                        value={editDescription}
-                                        onChange={(e)=> setEditDescription(e.target.value)}
-                                        onKeyDown={(e)=> handleExit(e.key)}
-                                        disabled={disabled}
-                                        />
+                                        <EditForm onSubmit={handleEditPost}>
+                                            <input
+                                                ref={refs.current[index]}
+                                                value={editDescription}
+                                                onChange={(e) => setEditDescription(e.target.value)}
+                                                onKeyDown={(e) => handleExit(e.key)}
+                                                disabled={disabled}
+                                            />
                                         </EditForm> :
-                                    <PostDescription>
+                                        <PostDescription>
 
-                                    {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
-                                        <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
-                                    ))}
-                                </PostDescription>}
+                                            {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                                <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                            ))}
+                                        </PostDescription>}
 
 
                                     <Metadata href={f.shared_link} target="_blank">
@@ -220,6 +242,33 @@ export default function TimelinePage() {
         </TimelinePageContainer>
     )
 }
+
+const ImageLikeContainer = styled.div`
+display:flex;
+flex-direction:column;
+align-items:center;
+max-width:50px;
+margin-right:18px;
+margin-bottom:4px;
+p{
+color:white;
+font-family: 'Lato';
+font-weight: 400;
+font-size: 11px;
+line-height: 13px;
+text-align: center;
+}
+img {
+    margin-bottom:4px;
+}
+img:first-child {
+    margin-bottom:19px;
+}
+img:nth-child(2) {
+    cursor:pointer;
+}
+
+`
 
 const TimelinePageContainer = styled.div`
     display:flex;

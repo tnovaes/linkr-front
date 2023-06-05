@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import apiPosts from "../services/apiPosts.js";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import reactStringReplace from 'react-string-replace';
+import heart from "../assets/heart.png";
+import filledHeart from "../assets/filled-heart.png";
 
 export default function UserPage() {
     const { id } = useParams();
@@ -20,23 +22,37 @@ export default function UserPage() {
                 const token = localStorage.getItem("token")
                 if (!token) return navigate("/")
                 if (!Number.isInteger(Number(id))) return navigate("/timeline")
-                const userInfo = await apiPosts.getPostsByUserID(token, id)
+                // const userInfo = await apiPosts.getPostsByUserID(token, id)
+                const [userInfo, likedPosts] = await Promise.all([apiPosts.getPostsByUserID(token, id), apiPosts.getLikes(token)])
+                const timelineInfo = userInfo.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
                 const arrayName = userInfo.data[2];
-                console.log(userInfo.data);
-                console.log(userInfo.data[0])
-                setFeed(userInfo.data[0]);
+                setFeed(timelineInfo);
                 setTrending(userInfo.data[1]);
                 setName(arrayName[0]);
                 setCarregando(false);
             } catch (err) {
-                console.log(err.response)
                 alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    
+    async function handleLike(post_id) {
+        try {
+            const token = localStorage.getItem('token')
+            apiPosts.toggleLike(token, post_id)
+            const newFeed = feed.map(item => {
+                if (post_id === item.post_id) {
+                    item.isLiked ? --item.likes: ++item.likes
+                    item.isLiked = !item.isLiked
+                }
+                return item
+            })
+
+            setFeed(prev => newFeed)
+        } catch (e) {
+        }
+    }
     return (
         <TimelinePageContainer>
             <FeedContainer>
@@ -47,7 +63,11 @@ export default function UserPage() {
                 (carregando === false && feed) &&
                     feed.map((f, index) =>
                         <PostContainer key={index}>
-                            <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                                            <ImageLikeContainer>
+                                    <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                    <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart:heart} alt="heart" />
+                                    <p>{f.likes} Likes</p>
+                                </ImageLikeContainer>
                             <PostInfo>
                                 <TopLine>
                                     <Username>{f.name}</Username>
@@ -83,6 +103,33 @@ export default function UserPage() {
         </TimelinePageContainer>
     )
 }
+
+
+const ImageLikeContainer = styled.div`
+display:flex;
+flex-direction:column;
+align-items:center;
+max-width:50px;
+margin-right:18px;
+margin-bottom:4px;
+p{
+color:white;
+font-family: 'Lato';
+font-weight: 400;
+font-size: 11px;
+line-height: 13px;
+text-align: center;
+}
+img {
+    margin-bottom:4px;
+}
+img:first-child {
+    margin-bottom:19px;
+}
+img:nth-child(2) {
+    cursor:pointer;
+}
+`
 
 const TimelinePageContainer = styled.div`
     display:flex;
