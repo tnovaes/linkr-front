@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { ProfileImage } from "../components/ProfileImage.js";
 import { useNavigate } from "react-router-dom";
 import apiPosts from "../services/apiPosts.js";
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
 import pencil from "../assets/pencil.svg";
@@ -18,8 +18,35 @@ export default function TimelinePage() {
     const [reload, setReload] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const [selectedPost, setSelectedPost] = useState(0);
+    const [postIndex, setpostIndex] = useState(0);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editDescription, setEditDescription] = useState("")
     const navigate = useNavigate();
-    const { userProfileImage } = usePhoto()
+    const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
+    React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
+    React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
+    React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef()
+    ])
+    const { userProfileImage } = usePhoto();
+    const toggleEditing = (Index, descrip,id) => {
+        setpostIndex(Index);
+        setSelectedPost(id)
+        setEditDescription(descrip)
+        setIsEditing(!isEditing);
+    };
+    
+    function handleExit(chave){
+        if(chave==='Escape'){
+            setIsEditing(!isEditing);
+        }
+    }
+
+    useEffect(() => {
+        if (isEditing) {
+            refs.current[postIndex].current.focus();
+        }
+    }, [isEditing]);
+
     useEffect(() => {
         (async () => {
             try {
@@ -47,6 +74,24 @@ export default function TimelinePage() {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
 
+    function handleEditPost(e){
+        e.preventDefault();
+        setDisabled(true);
+        const description = {description: editDescription}
+
+        apiPosts.postEdit(userToken, description ,selectedPost)
+            .then(res =>{
+                setDisabled(false)
+                setIsEditing(false)
+                setReload(!reload)
+            })
+            .catch(err => {
+                alert("There was an error publishing your edition")
+                console.log(err.response.data);
+                setDisabled(false);
+            });
+    }
+
     function handlePost(e) {
         e.preventDefault();
         setDisabled(true);
@@ -68,7 +113,7 @@ export default function TimelinePage() {
             });
     }
 
-    function handleModal(postId){
+    function handleModal(postId) {
         setSelectedPost(postId)
         setOpenModal(true)
     }
@@ -102,22 +147,32 @@ export default function TimelinePage() {
                     </PostForm>
                 </SharePostContainer>
                 {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                    feed.map((f,index) =>{
-                        return(<PostContainer key={index}>
+                    feed.map((f, index) => {
+                        return (<PostContainer key={index}>
                             <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                             <PostInfo>
                                 <TopLine>
                                     <Username>{f.name}</Username>
-                                    { (f.post_owner == userId) && <ButtonBox>
-                                        <button onClick={()=> console.log('alterar')}>
-                                            <img src={pencil} alt="Edit"/>
+                                    {(f.post_owner == userId) && <ButtonBox>
+                                        <button onClick={() => toggleEditing(index,f.description,f.post_id)}>
+                                            <img src={pencil} alt="Edit" />
                                         </button>
-                                        <button onClick={()=> handleModal(f.post_id)}>
-                                            <img src={trashCan} alt="Delete"/>
+                                        <button onClick={() => handleModal(f.post_id)}>
+                                            <img src={trashCan} alt="Delete" />
                                         </button>
                                     </ButtonBox>}
                                 </TopLine>
-                                <PostDescription>{f.description}</PostDescription>
+                                {(isEditing && index == postIndex) ?
+                                    <EditForm onSubmit={handleEditPost}>
+                                        <input 
+                                        ref={refs.current[index]}
+                                        value={editDescription}
+                                        onChange={(e)=> setEditDescription(e.target.value)}
+                                        onKeyDown={(e)=> handleExit(e.key)}
+                                        disabled={disabled}
+                                        />
+                                        </EditForm> :
+                                    <PostDescription>{f.description}</PostDescription>}
                                 <Metadata href={f.shared_link} target="_blank">
                                     <LinkInfo>
                                         <LinkTitle>{f.link_title}</LinkTitle>
@@ -128,11 +183,12 @@ export default function TimelinePage() {
                                 </Metadata>
                             </PostInfo>
                         </PostContainer>
-                        )}
+                        )
+                    }
                     )
                 }
             </FeedContainer>
-            <Modal isOpen={openModal} closeModal={()=> setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
+            <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
         </TimelinePageContainer>
     )
 }
@@ -284,6 +340,22 @@ const PostDescription = styled.p`
     align-self: flex-start;
     word-wrap: break-word;
     text-align: left;
+`
+
+const EditForm = styled.form`
+    width: 100%;
+    input{
+        width: 100%;
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 20px;
+    color: #B7B7B7;
+    align-self: flex-start;
+    word-wrap: break-word;
+    text-align: left;
+    }
 `
 
 const Metadata = styled.a`

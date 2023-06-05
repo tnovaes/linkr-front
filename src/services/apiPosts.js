@@ -17,6 +17,11 @@ function getPostsByUserID(token, id) {
 function deletePostByID(token,id) {
     return axios.delete(`${BASE_URL}/post/${id}`, { headers: { Authorization: token } });
 }
-const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID };
+
+function postEdit(token,body,id){
+    return axios.put(`${BASE_URL}/post/${id}`,body,{ headers: { Authorization: token } })
+}
+
+const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID, postEdit};
 
 export default apiPosts;
