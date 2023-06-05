@@ -138,6 +138,9 @@ const TimelinePageContainer = styled.div`
     background-color: #333333;
     min-height:100%;
     gap: 25px;
+    @media (max-width: 936px) {
+        min-width: 100%;
+    }
 `
 
 const FeedContainer = styled.div`
@@ -146,6 +149,11 @@ const FeedContainer = styled.div`
     align-items: center;
     max-width: 611px;
     margin-top: 72px;
+    @media (max-width: 611px) {
+        min-width: 100%;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
 `
 
 const Title = styled.div`
@@ -158,6 +166,11 @@ const Title = styled.div`
     color: #FFFFFF;
     align-self: flex-start;
     margin-bottom: 44px;
+    @media (max-width: 611px) {
+        margin-left: 15px;
+        margin-top: 80px;
+        margin-bottom: 8px;
+    }
 `
 
 const PostInfo = styled.div`
@@ -165,6 +178,11 @@ const PostInfo = styled.div`
     flex-direction: column;
     max-width: 502px;
     gap:7px;
+    @media (max-width: 611px) {
+    border-radius: 0px;
+    margin: 0 7px;
+    max-width: 100%;
+    }
 `
 
 const PostContainer = styled.div`
@@ -186,6 +204,12 @@ const PostContainer = styled.div`
         button{
             visibility:visible;
         }
+    }
+    @media (max-width: 611px) {
+    border-radius: 0px;
+    max-width: 100vw;
+    justify-content: center;
+    margin-bottom: 0;
     }
 `
 
@@ -210,7 +234,7 @@ const PostDescription = styled.p`
     font-style: normal;
     font-weight: 400;
     font-size: 17px;
-    line-height: 20px;
+    line-height: 24px;
     color: #B7B7B7;
     align-self: flex-start;
     word-wrap: break-word;
@@ -233,6 +257,16 @@ const Metadata = styled.a`
     border: 1px solid #4D4D4D;
     border-radius: 11px;
     text-decoration: none;
+    overflow: hidden;
+    @media (max-width: 611px) {
+        height: 115px;
+        padding: 2px;
+    }
+    @media (max-width: 375px) {
+        max-width: 278px;
+        height: 115px;
+        padding: 2px;
+    }
 `
 
 const LinkInfo = styled.div`
@@ -245,9 +279,20 @@ const LinkInfo = styled.div`
     flex-direction: column;
     word-wrap: break-word;
     gap: 4px;
+    @media (max-width: 611px) {
+        padding: 2px;
+        overflow: hidden;
+    }
+    @media (max-width: 375px) {
+        max-width: 175px;
+        padding: 2px;
+        overflow: hidden;
+    }
 `
 
 const LinkTitle = styled.h1`
+    font-family: 'Lato';
+    font-style: normal;
     font-weight: 400;
     font-size: 16px;
     line-height: 18px;
@@ -255,30 +300,66 @@ const LinkTitle = styled.h1`
     color: #CECECE;
     word-wrap: break-word;
     overflow: hidden;
+    @media (max-width: 611px) {
+        padding: 2px;
+    }
+    @media (max-width: 375px) {
+        max-width: 175px;
+        padding: 2px;
+    }
 `
+
 const LinkDescription = styled.p`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
     font-size: 11px;
     line-height: 12.5px;
     height: 38px;
     color: #9B9595;
     word-wrap: break-word;
     overflow: hidden;
+    @media (max-width: 611px) {
+        padding: 2px;
+        height: 26px;
+    }
+    @media (max-width: 375px) {
+        max-width: 175px;
+        padding: 2px;
+        height: 26px;
+    }
 `
 
 const LinkURL = styled.p`
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
     font-size: 11px;
     line-height: 14px;
     height: 28px;
     color: #CECECE;
     word-wrap: break-word;
     overflow: hidden;
-
+    @media (max-width: 611px) {
+        padding: 2px;
+    }
+    @media (max-width: 375px) {
+        max-width: 175px;
+        padding: 2px;
+    }
 `
 
 const LinkImage = styled.img`
     max-width: 153px;
     max-height: 155px;
     object-fit: cover;
+    @media (max-width: 611px) {
+        max-height: 115px;
+    }
+    @media (max-width: 375px) {
+        max-width: 95px;
+        max-height: 115px;
+    }
 `
 
 const NoFeed = styled.div`
@@ -298,7 +379,10 @@ const TrendingsContainer = styled.div`
     height: 405px;
     background-color: #171717;
     margin-top: 257px;
-    border-radius: 16px;    
+    border-radius: 16px;
+    @media (max-width: 936px) {
+    display: none;
+    }   
 `
 
 const TrendTitle = styled.div`
