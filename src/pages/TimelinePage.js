@@ -29,6 +29,7 @@ export default function TimelinePage() {
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef()
     ])
     const { userProfileImage } = usePhoto();
+
     const toggleEditing = (Index, descrip, id) => {
         setpostIndex(Index);
         setSelectedPost(id)
@@ -47,6 +48,7 @@ export default function TimelinePage() {
             refs.current[postIndex].current.focus();
         }
     }, [isEditing]);
+
 
     useEffect(() => {
         (async () => {
@@ -155,7 +157,9 @@ export default function TimelinePage() {
                                 <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                                 <PostInfo>
                                     <TopLine>
-                                        <Username>{f.name}</Username>
+                                        <Link to={`/user/${f.post_owner}`}>
+                                            <Username>{f.name}</Username>
+                                        </Link>
                                         {(f.post_owner === Number(userId)) && <ButtonBox>
                                             <button onClick={() => toggleEditing(index, f.description, f.post_id)}>
                                                 <img src={pencil} alt="Edit" />
@@ -177,10 +181,13 @@ export default function TimelinePage() {
                                         />
                                         </EditForm> :
                                     <PostDescription>
+
                                     {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
                                         <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
                                     ))}
                                 </PostDescription>}
+
+
                                     <Metadata href={f.shared_link} target="_blank">
                                         <LinkInfo>
                                             <LinkTitle>{f.link_title}</LinkTitle>
@@ -361,11 +368,12 @@ const PostContainer = styled.div`
     margin-bottom: 16px;
     gap: 5px;
     box-sizing: border-box;
-
+    a{
+        text-decoration: none;
+    }
     button{
         visibility: hidden;
     }
-
     :hover{
         button{
             visibility:visible;
