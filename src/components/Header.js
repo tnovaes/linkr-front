@@ -93,7 +93,7 @@ export function Header({ children }) {
                     {usersList.map(item =>
                         <UserListItem id={item.id} key={item.id} data-test="user-search" >
                             <ProfileImage id={item.id} width={'39px'} height={'39px'} userProfileImage={item.avatar} />
-                            <p id={item.id}>{item.name}</p>
+                            <p id={item.id}>{item.name} {item.is_following && <span>• following</span>}</p>
                         </UserListItem>
                     )}
                 </UserListContainer>
@@ -160,6 +160,14 @@ const UserListItem = styled.li`
     }
     :last-child{
         margin-bottom: 23px;
+    }
+    span:last-child{
+        color: #C5C5C5;
+        font-family: 'Lato';
+        font-weight: 400;
+        font-size: 19px;
+        line-height: 23px;
+        text-transform: lowercase;
     }
 `
 
