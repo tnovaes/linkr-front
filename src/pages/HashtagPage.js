@@ -31,23 +31,23 @@ export default function HashtagPage() {
     return (
         <HashtagPageContainer>
             <FeedContainer>
-                <Title># {hashtag}</Title>
+                <Title data-test="hashtag-title" ># {hashtag}</Title>
                 {carregando === true ? <NoFeed>Loading...</NoFeed> :
                     feed.map((f) =>
-                        <PostContainer key={f.id}>
+                        <PostContainer key={f.id} data-test="post" >
                             <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                             <PostInfo>
                                 <TopLine>
                                     <Link to={`/user/${f.post_owner}`}>
-                                        <Username>{f.name}</Username>
+                                        <Username data-test="username" >{f.name}</Username>
                                     </Link>
                                 </TopLine>
-                                <PostDescription>
+                                <PostDescription data-test="description" >
                                     {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
                                         <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
                                     ))}
                                 </PostDescription>
-                                <Metadata href={f.shared_link} target="_blank">
+                                <Metadata href={f.shared_link} target="_blank" data-test="link" >
                                     <LinkInfo>
                                         <LinkTitle>{f.link_title}</LinkTitle>
                                         <LinkDescription>{f.link_description}</LinkDescription>
@@ -59,13 +59,13 @@ export default function HashtagPage() {
                         </PostContainer>
                     )}
             </FeedContainer>
-            <TrendingsContainer>
+            <TrendingsContainer data-test="trending">
                 <TrendTitle>
                     trending
                 </TrendTitle>
                 {carregando === true ? <NoFeed>Loading...</NoFeed> :
                     trending.map((h) =>
-                        <TrendHashtags key={h.name} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)}>
+                        <TrendHashtags key={h.name} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)} data-test="hashtag" >
                             {h.name}
                         </TrendHashtags>
                     )}

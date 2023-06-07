@@ -43,6 +43,7 @@ export default function SignUpPage() {
         required
         value={form.email}
         onChange={handleForm}
+        data-test="email"
       />
       <Input
         placeholder={"password"}
@@ -51,6 +52,7 @@ export default function SignUpPage() {
         required
         value={form.password}
         onChange={handleForm}
+        data-test="password"
       />
       <Input
         placeholder={"username"}
@@ -59,6 +61,7 @@ export default function SignUpPage() {
         required
         value={form.name}
         onChange={handleForm}
+        data-test="username"
       />
       <Input
         placeholder={"picture url"}
@@ -67,11 +70,12 @@ export default function SignUpPage() {
         required
         value={form.avatar}
         onChange={handleForm}
+        data-test="picture-url"
       />
-      <Button type="submit" disabled={disabled}>
+      <Button type="submit" disabled={disabled} data-test="sign-up-btn" >
         Sign Up
       </Button>
-      <Link to={'/'}> Switch back to log in</Link>
+      <Link to={'/'} data-test="login-link" > Switch back to log in</Link>
     </FormContainer>
   </SignUpPageContainer>
   );

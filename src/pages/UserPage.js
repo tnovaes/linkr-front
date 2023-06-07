@@ -119,7 +119,7 @@ export default function UserPage() {
                 {(carregando === false && !feed) ? <NoFeed> Sem posts </NoFeed> :
                     (carregando === false && feed) &&
                     feed?.map((f, index) =>
-                        <PostContainer key={index}>
+                        <PostContainer key={index} data-test="post" >
                             <ImageLikeContainer>
                                 <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                                 <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" />
@@ -131,14 +131,14 @@ export default function UserPage() {
                             </ImageLikeContainer>
                             <PostInfo>
                                 <TopLine>
-                                    <Username>{f.name}</Username>
+                                    <Username data-test="username" >{f.name}</Username>
                                 </TopLine>
-                                <PostDescription>
+                                <PostDescription data-test="description" >
                                     {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
                                         <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
                                     ))}
                                 </PostDescription>
-                                <Metadata href={f.shared_link} target="_blank">
+                                <Metadata href={f.shared_link} target="_blank" data-test="link" >
                                     <LinkInfo>
                                         <LinkTitle>{f.link_title}</LinkTitle>
                                         <LinkDescription>{f.link_description}</LinkDescription>
