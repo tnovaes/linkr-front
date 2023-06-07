@@ -87,20 +87,21 @@ export function Header({ children }) {
                     placeholder="Search for people"
                     value={searchInputValue}
                     autoComplete="off"
+                    data-test="search"
                 />
                 <UserListContainer >
                     {usersList.map(item =>
-                        <UserListItem id={item.id} key={item.id}>
+                        <UserListItem id={item.id} key={item.id} data-test="user-search" >
                             <ProfileImage id={item.id} width={'39px'} height={'39px'} userProfileImage={item.avatar} />
                             <p id={item.id}>{item.name}</p>
                         </UserListItem>
                     )}
                 </UserListContainer>
             </SearchPersonContainer>
-            <NavContainer>
+            <NavContainer data-test="menu" >
                 <Arrow onClick={handleMenu} arrowDirection={arrowDirection} />
-                <ProfileImage onClick={handleMenu} userProfileImage={userProfileImage} width="53px" height="53px" />
-                {showMenu && <MenuButton onClick={handleLogout}>Logout</MenuButton>}
+                <ProfileImage data-test="avatar" onClick={handleMenu} userProfileImage={userProfileImage} width="53px" height="53px" />
+                {showMenu && <MenuButton onClick={handleLogout} data-test="logout" >Logout</MenuButton>}
             </NavContainer>
         </HeaderContainer>
         {children}
