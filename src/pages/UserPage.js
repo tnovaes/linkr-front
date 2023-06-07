@@ -6,15 +6,20 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import reactStringReplace from 'react-string-replace';
 import heart from "../assets/heart.png";
 import filledHeart from "../assets/filled-heart.png";
+import fallbackPhoto from '../assets/no-profile-picture-icon.svg'
+import apiAuth from "../services/apiAuth.js";
 
 export default function UserPage() {
     const { id } = useParams();
     const [feed, setFeed] = useState([]);
     const [trending, setTrending] = useState([]);
     const [carregando, setCarregando] = useState(false);
+    const [isFollowed, setIsFollowed] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
     const [name, setName] = useState([]);
     const [likesInfo, setLikesInfo] = useState(false)
     const [oldFeed, setOldFeed] = useState([])
+    const [userPagePhoto, setUserPagePhoto] = useState(fallbackPhoto)
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -25,9 +30,16 @@ export default function UserPage() {
                 if (!token) return navigate("/")
                 if (!Number.isInteger(Number(id))) return navigate("/timeline")
                 // const userInfo = await apiPosts.getPostsByUserID(token, id)
-                const [userInfo, likedPosts] = await Promise.all([apiPosts.getPostsByUserID(token, id), apiPosts.getLikes(token)])
+                const [userInfo, likedPosts, IsFollowing] = await Promise.all([apiPosts.getPostsByUserID(token, id), apiPosts.getLikes(token), apiAuth.getIsFollowing(token, id)])
                 const timelineInfo = userInfo.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
                 const arrayName = userInfo.data[2];
+                if (timelineInfo.length > 0) {
+                    setUserPagePhoto(timelineInfo[0].avatar)
+                } else {
+                    const photoUrl = await apiAuth.getUserPhoto(token, id)
+                    setUserPagePhoto(photoUrl[0].avatar)
+                }
+                setIsFollowed(IsFollowing.data)
                 setFeed(timelineInfo);
                 setTrending(userInfo.data[1]);
                 setName(arrayName[0]);
@@ -110,11 +122,30 @@ export default function UserPage() {
         } catch (e) {
         }
     }
+    async function handleFollow() {
+        setFollowLoading(true)
+        try {
+            const token = localStorage.getItem('token')
+            const response = await apiAuth.setFollower(token, id, isFollowed)
+            if (response.status === 200) {
+                setIsFollowed(prev => !prev)
+            }
+        } catch (e) {
+            alert("Não foi possível executar essa operação")
+        }
+        setFollowLoading(false)
+    }
     return (
         <TimelinePageContainer>
             <FeedContainer>
                 {carregando === true ? <NoFeed>Loading...</NoFeed> :
-                    <Title>{name.name}'s posts</Title>
+                    <TitleContainer>
+                        <ImageTitleContainer>
+                            <ProfileImage userProfileImage={userPagePhoto} width="50px" height="50px" />
+                            <Title>{name.name}'s posts</Title>
+                        </ImageTitleContainer>
+                        <TitleButton disabled={followLoading} isFollowed={isFollowed} onClick={handleFollow}>{isFollowed ? "Unfollow" : "Follow"} </TitleButton>
+                    </TitleContainer>
                 }
                 {(carregando === false && !feed) ? <NoFeed> Sem posts </NoFeed> :
                     (carregando === false && feed) &&
@@ -164,6 +195,55 @@ export default function UserPage() {
         </TimelinePageContainer>
     )
 }
+
+const TitleContainer = styled.div`
+position:absolute;
+top:-104px;
+left:0;
+display:flex;
+align-items:center;
+justify-content:space-between;
+@media (min-width: 936px) {
+    position:relative;
+    width: 937px;
+    top:-41px;
+font-size: 33px;
+line-height: 49px;
+}
+`
+const ImageTitleContainer = styled.div`
+ display:flex;
+align-items:center;
+justify-content:flex-start; 
+max-height:64px;
+width:100%;
+img {
+    margin: 0 20px;
+} 
+
+`
+const TitleButton = styled.button`
+cursor: pointer;
+background-color:${({ isFollowed }) => isFollowed ? "white" : "#1877f2"};
+border-radius: 5px;
+font-family: 'Lato';
+font-weight: 700;
+font-size: 14px;
+line-height: 17px;
+color:${({ isFollowed }) => isFollowed ? "#1877f2" : "white"};
+max-width:112px;
+width:100%;
+height:31px;
+transition: all 0.1s linear;
+@media (min-width: 936px) {
+        position:fixed;
+        top:165px;
+        left:calc(50% + 353px);
+    }
+
+
+`
+
 
 
 const ImageLikeContainer = styled.div`
@@ -235,20 +315,23 @@ const TimelinePageContainer = styled.div`
 `
 
 const FeedContainer = styled.div`
+    position:relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     max-width: 611px;
-    margin-top: 72px;
+    margin-top: 257px;
     @media (max-width: 611px) {
         min-width: 100%;
         gap: 25px;
         margin-bottom: 25px;
     }
+    @media (min-width: 936px){
+        margin-top:194px;
+    }
 `
 
 const Title = styled.div`
-    margin-top: 78px;
     font-family: 'Oswald';
     font-style: normal;
     font-weight: 700;
@@ -256,10 +339,10 @@ const Title = styled.div`
     line-height: 64px;
     color: #FFFFFF;
     align-self: flex-start;
-    margin-bottom: 44px;
+    /* margin-bottom: 44px; */
     @media (max-width: 611px) {
         margin-left: 15px;
-        margin-top: 80px;
+        /* margin-top: 80px; */
         margin-bottom: 8px;
     }
 `
@@ -282,7 +365,6 @@ const PostContainer = styled.div`
     width:100%;
     background: #171717;
     border-radius: 16px;
-    padding-left: 18px;
     padding: 19px;
     margin-bottom: 16px;
     gap: 5px;

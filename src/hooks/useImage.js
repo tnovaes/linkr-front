@@ -14,7 +14,7 @@ export function ImgProvider({ children }) {
                 setUserProfileImage("")
                 return navigate('/')
             }
-            const photoUrl = await apiAuth.getUserPhoto(token)
+            const photoUrl = await apiAuth.getUserProfilePhoto(token)
             if (photoUrl.status === 200) {
                 const avatarUrl = photoUrl.data.avatar
                 setUserProfileImage(() => avatarUrl)
