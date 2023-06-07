@@ -35,8 +35,8 @@ export default function Modal({ isOpen, closeModal, token, post_id }) {
                         to delete this post?
                     </Confirmation>
                     <Buttons>
-                        <ButtonA onClick={closeModal}>No, go back</ButtonA>
-                        <ButtonB onClick={() => deletePost(token, post_id)}>{load ? <ThreeDots width={50} /> : "Yes, delete it"}</ButtonB>
+                        <ButtonA onClick={closeModal} data-test="cancel" >No, go back</ButtonA>
+                        <ButtonB onClick={() => deletePost(token, post_id)} data-test="confirm" >{load ? <ThreeDots width={50} /> : "Yes, delete it"}</ButtonB>
                     </Buttons>
                 </ModalContent>
             </ModalBack>
