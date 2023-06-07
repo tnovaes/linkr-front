@@ -17,15 +17,15 @@ export default function TimelinePage() {
     const [form, setForm] = useState({ shared_link: "", description: "" });
     const [disabled, setDisabled] = useState(false);
     const [userId, setUserId] = useState("");
-    const [userToken, setUserToken] = useState("")
+    const [userToken, setUserToken] = useState("");
     const [reload, setReload] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const [selectedPost, setSelectedPost] = useState(0);
     const [postIndex, setpostIndex] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
-    const [editDescription, setEditDescription] = useState("")
-    const [oldFeed, setOldFeed] = useState([])
-    const [likesInfo, setLikesInfo] = useState(false)
+    const [editDescription, setEditDescription] = useState("");
+    const [oldFeed, setOldFeed] = useState([]);
+    const [likesInfo, setLikesInfo] = useState(false);
     const navigate = useNavigate();
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
@@ -204,7 +204,7 @@ return (
     <TimelinePageContainer>
         <FeedContainer>
             <Title>timeline</Title>
-            <SharePostContainer>
+            <SharePostContainer data-test="publish-box" >
                 <ImageContainer>
                     <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
                 </ImageContainer>
@@ -218,6 +218,7 @@ return (
                         value={form.shared_link}
                         onChange={handleForm}
                         disabled={disabled}
+                        data-test="link"
                     ></LinkInput>
                     <DescriptionInput
                         placeholder="Awesome link about your #passion"
@@ -226,19 +227,20 @@ return (
                         value={form.description}
                         onChange={handleForm}
                         disabled={disabled}
+                        data-test="description"
                     ></DescriptionInput>
-                    <Button type="submit" disabled={disabled}>{disabled ? "Publishing..." : "Publish"}</Button>
+                    <Button type="submit" disabled={disabled} data-test="publish-btn" >{disabled ? "Publishing..." : "Publish"}</Button>
                 </PostForm>
             </SharePostContainer>
-            {feed.length === 0 ? <NoFeed>Loading...</NoFeed> :
+            {feed.length === 0 ? <NoFeed data-test="message" >Loading...</NoFeed> :
                 feed.map((f, index) => {
                     return (
-                        <PostContainer key={f.post_id}>
+                        <PostContainer key={f.post_id} data-test="post">
                             <ImageLikeContainer>
                                 <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
-                                <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" />
-                                <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)}>{f.likes} Likes</p>
-                                {likesInfo && f.likesInfo?.length > 0 && (<div>
+                                <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" data-test="like-btn" />
+                                <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)} data-test="counter" >{f.likes} Likes</p>
+                                {likesInfo && f.likesInfo?.length > 0 && (<div data-test="tooltip">
                                     <div></div>
                                     <p>{f.likesInfo}</p>
                                 </div>)}
@@ -246,13 +248,13 @@ return (
                             <PostInfo>
                                 <TopLine>
                                     <Link to={`/user/${f.post_owner}`}>
-                                        <Username>{f.name}</Username>
+                                        <Username data-test="username" >{f.name}</Username>
                                     </Link>
                                     {(f.post_owner === Number(userId)) && <ButtonBox>
-                                        <button onClick={() => toggleEditing(index, f.description, f.post_id)}>
+                                        <button onClick={() => toggleEditing(index, f.description, f.post_id)} data-test="edit-btn">
                                             <img src={pencil} alt="Edit" />
                                         </button>
-                                        <button onClick={() => handleModal(f.post_id)}>
+                                        <button onClick={() => handleModal(f.post_id)} data-test="delete-btn" >
                                             <img src={trashCan} alt="Delete" />
                                         </button>
                                     </ButtonBox>}
@@ -268,7 +270,7 @@ return (
                                             disabled={disabled}
                                         />
                                     </EditForm> :
-                                    <PostDescription>
+                                    <PostDescription data-test="description" >
 
                                         {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
                                             <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
@@ -276,7 +278,7 @@ return (
                                     </PostDescription>}
 
 
-                                <Metadata href={f.shared_link} target="_blank">
+                                <Metadata href={f.shared_link} target="_blank" data-test="link">
                                     <LinkInfo>
                                         <LinkTitle>{f.link_title}</LinkTitle>
                                         <LinkDescription>{f.link_description}</LinkDescription>
@@ -291,13 +293,13 @@ return (
                 })
             }
         </FeedContainer>
-        <TrendingsContainer>
+        <TrendingsContainer data-test="trending" >
             <TrendTitle>
                 trending
             </TrendTitle>
             {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
                 trending.map((h) =>
-                    <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)}>
+                    <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)} data-test="hashtag" >
                         {h.name}
                     </TrendHashtags>
                 )}

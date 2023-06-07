@@ -61,6 +61,7 @@ export default function SignInPage() {
           required
           value={form.email}
           onChange={handleForm}
+          data-test="email"
         />
         <Input
           placeholder={"password"}
@@ -69,9 +70,10 @@ export default function SignInPage() {
           required
           value={form.password}
           onChange={handleForm}
+          data-test="password"
         />
-        <Button disabled={disabled}>Log In</Button>
-        <Link to={'/signup'}> First time? Create and account! </Link>
+        <Button disabled={disabled} data-test="login-btn" >Log In</Button>
+        <Link to={'/signup'} data-test="sign-up-link" > First time? Create and account! </Link>
       </FormContainer>
     </SignInPageContainer>
   );
