@@ -37,7 +37,6 @@ export default function UserPage() {
                     setUserPagePhoto(timelineInfo[0].avatar)
                 } else {
                     const photoUrl = await apiAuth.getUserPhoto(token, id)
-                    console.log(photoUrl[0].avatar)
                     setUserPagePhoto(photoUrl[0].avatar)
                 }
                 setIsFollowed(IsFollowing.data)
@@ -128,9 +127,9 @@ export default function UserPage() {
         try {
             const token = localStorage.getItem('token')
             const response = await apiAuth.setFollower(token, id, isFollowed)
-            console.log(response)
+
             if (response.status === 200) {
-                console.log(isFollowed)
+
                 setIsFollowed(prev => !prev)
             }
         } catch (e) {

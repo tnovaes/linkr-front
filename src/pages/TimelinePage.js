@@ -125,7 +125,6 @@ export default function TimelinePage() {
             } else if (newLikesInfo.data.length === 1 && newLikesInfo.data[0].post_id !== post_id) {
                 names.push(newLikesInfo.data[0])
             }
-            console.log(newLikesInfo)
             newFeed = newFeed.map(post => {
                 const isPostTheHovered = post.post_id === post_id
                 const isLikedByUser = post.isLiked === true
