@@ -77,6 +77,7 @@ export function Header({ children }) {
                 <Logo>linkr</Logo>
             </Link>
             <SearchPersonContainer ref={searchContainerRef}>
+                <InnerContainer>
                 <DebounceInput
                     element={SearchPersonInput}
                     id={"input"}
@@ -97,6 +98,7 @@ export function Header({ children }) {
                         </UserListItem>
                     )}
                 </UserListContainer>
+                </InnerContainer>
             </SearchPersonContainer>
             <NavContainer data-test="menu" >
                 <Arrow onClick={handleMenu} arrowDirection={arrowDirection} />
@@ -108,6 +110,14 @@ export function Header({ children }) {
     </>)
 }
 
+const InnerContainer = styled.div`
+    @media (max-width: 936px) {
+    width:100%;
+    max-width: 611px;
+    background-color:#E7E7E7;
+    border-radius: 8px;
+    }
+`
 const UserListContainer = styled.ul`
     height:fit-content;
     display: flex;
@@ -147,6 +157,13 @@ const UserListContainer = styled.ul`
             outline:2px solid white;
         }
     }
+    @media (max-width: 936px) {
+    width:100%;
+    max-width: 611px;
+    background-color:#E7E7E7;
+    
+    border-radius: 8px;
+    }
 `
 
 const UserListItem = styled.li`
@@ -169,6 +186,10 @@ const UserListItem = styled.li`
         line-height: 23px;
         text-transform: lowercase;
     }
+    @media (max-width: 936px) {
+    font-size: 17px;
+    line-height: 20px;
+    }
 `
 
 const SearchPersonContainer = styled.div`
@@ -182,6 +203,7 @@ const SearchPersonContainer = styled.div`
     flex-direction: column;
     max-height:60%;
     overflow-y:hidden;
+    width:100%;
     input{
         height:45px;
     }
@@ -192,17 +214,18 @@ const SearchPersonContainer = styled.div`
     position: fixed;
     top: 72px;
     left: 0;
-    max-width: calc(100% - 30px);
-    height: 65px;
     background-color:#333333;
     padding: 10px 15px;
     border-radius: 0;
     border: none;
     margin: 0;
+    width:100%;
+    max-width:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
     }
-    @media (max-width: 375px) {
-    max-width: 375px;
-    }
+
 `
 const SearchPersonInput = styled.input`
     width:100%;
@@ -216,6 +239,8 @@ const SearchPersonInput = styled.input`
     height:45px;
     padding-bottom:13px;
     padding-top:9px;
+    max-width: 611px;
+    
     ::placeholder{
         color:#C6C6C6;
     }
@@ -256,9 +281,9 @@ const HeaderContainer = styled.header`
     a {
         text-decoration: none;
     }
-    @media (max-width: 936px) {
+    @media (min-width: 936px) {
     padding: 10px 30px;
-    max-width: calc(100% - 30px);
+    max-width: 100%;
     }
     @media (max-width: 375px) {
     max-width: 375px;
