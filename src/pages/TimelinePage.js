@@ -12,7 +12,7 @@ import Modal from "../components/Modal.js";
 import reactStringReplace from 'react-string-replace';
 
 export default function TimelinePage() {
-    const [feed, setFeed] = useState([]);
+    const [feed, setFeed] = useState();
     const [trending, setTrending] = useState([]);
     const [form, setForm] = useState({ shared_link: "", description: "" });
     const [disabled, setDisabled] = useState(false);
@@ -26,6 +26,8 @@ export default function TimelinePage() {
     const [editDescription, setEditDescription] = useState("");
     const [oldFeed, setOldFeed] = useState([]);
     const [likesInfo, setLikesInfo] = useState(false);
+    const [hasFriends, setHasFriends] = useState(false);
+    const [isLoadingPage, setIsLoadingPage] = useState(true);
     const navigate = useNavigate();
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
@@ -62,15 +64,14 @@ export default function TimelinePage() {
                 if (!token) return navigate("/");
 
                 const [timeline, likedPosts] = await Promise.all([apiPosts.getTimeline(token), apiPosts.getLikes(token)])
-                if (timeline.status === 204) {
-                    alert("There are no posts yet");
-                } else {
-                    const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
-                    setFeed(timelineInfo);
-                    setTrending(timeline.data[1]);
-                    setUserId(idUser);
-                    setUserToken(token);
-                }
+                const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
+                setHasFriends(timeline.data[2].hasFriends)
+                setFeed(timelineInfo);
+                setTrending(timeline.data[1]);
+                setUserId(idUser);
+                setUserToken(token);
+                setIsLoadingPage(false)
+
 
             } catch (err) {
                 console.log(err.response)
@@ -155,158 +156,159 @@ export default function TimelinePage() {
         setFeed(newFeed)
     }
 
-async function handleLikeHoverLeaving() {
-    setFeed(prev => [...oldFeed])
-    setLikesInfo(false)
-}
-function handlePost(e) {
-    e.preventDefault();
-    setDisabled(true);
-
-    if (!form.shared_link) return alert("Link input must be filled");
-
-    const token = localStorage.getItem("token");
-
-    apiPosts.publishPost(form, token)
-        .then(res => {
-            setForm({ shared_link: "", description: "" });
-            setDisabled(false);
-            setReload(!reload);
-        })
-        .catch(err => {
-            alert("There was an error publishing your link")
-            console.log(err.response.data);
-            setDisabled(false);
-        });
-}
-
-function handleModal(postId) {
-    setSelectedPost(postId)
-    setOpenModal(true)
-}
-async function handleLike(post_id) {
-    try {
-        const token = localStorage.getItem('token')
-        apiPosts.toggleLike(token, post_id)
-        const newFeed = feed.map(item => {
-            if (post_id === item.post_id) {
-                item.isLiked ? --item.likes : ++item.likes
-                item.isLiked = !item.isLiked
-            }
-            return item
-        })
-
-        setFeed(prev => newFeed)
-    } catch (e) {
+    async function handleLikeHoverLeaving() {
+        setFeed(prev => [...oldFeed])
+        setLikesInfo(false)
     }
-}
-return (
-    <TimelinePageContainer>
-        <FeedContainer>
-            <Title>timeline</Title>
-            <SharePostContainer data-test="publish-box" >
-                <ImageContainer>
-                    <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
-                </ImageContainer>
-                <PostForm onSubmit={handlePost}>
-                    <CTA>What are you going to share today?</CTA>
-                    <LinkInput
-                        placeholder="http://..."
-                        name="shared_link"
-                        type="url"
-                        required
-                        value={form.shared_link}
-                        onChange={handleForm}
-                        disabled={disabled}
-                        data-test="link"
-                    ></LinkInput>
-                    <DescriptionInput
-                        placeholder="Awesome link about your #passion"
-                        name="description"
-                        type="text"
-                        value={form.description}
-                        onChange={handleForm}
-                        disabled={disabled}
-                        data-test="description"
-                    ></DescriptionInput>
-                    <Button type="submit" disabled={disabled} data-test="publish-btn" >{disabled ? "Publishing..." : "Publish"}</Button>
-                </PostForm>
-            </SharePostContainer>
-            {feed.length === 0 ? <NoFeed data-test="message" >Loading...</NoFeed> :
-                feed.map((f, index) => {
-                    return (
-                        <PostContainer key={f.post_id} data-test="post">
-                            <ImageLikeContainer>
-                                <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
-                                <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" data-test="like-btn" />
-                                <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)} data-test="counter" >{f.likes} Likes</p>
-                                {likesInfo && f.likesInfo?.length > 0 && (<div data-test="tooltip">
-                                    <div></div>
-                                    <p>{f.likesInfo}</p>
-                                </div>)}
-                            </ImageLikeContainer>
-                            <PostInfo>
-                                <TopLine>
-                                    <Link to={`/user/${f.post_owner}`}>
-                                        <Username data-test="username" >{f.name}</Username>
-                                    </Link>
-                                    {(f.post_owner === Number(userId)) && <ButtonBox>
-                                        <button onClick={() => toggleEditing(index, f.description, f.post_id)} data-test="edit-btn">
-                                            <img src={pencil} alt="Edit" />
-                                        </button>
-                                        <button onClick={() => handleModal(f.post_id)} data-test="delete-btn" >
-                                            <img src={trashCan} alt="Delete" />
-                                        </button>
-                                    </ButtonBox>}
-                                    <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
-                                </TopLine>
-                                {(isEditing && index == postIndex) ?
-                                    <EditForm onSubmit={handleEditPost}>
-                                        <input
-                                            ref={refs.current[index]}
-                                            value={editDescription}
-                                            onChange={(e) => setEditDescription(e.target.value)}
-                                            onKeyDown={(e) => handleExit(e.key)}
-                                            disabled={disabled}
-                                        />
-                                    </EditForm> :
-                                    <PostDescription data-test="description" >
+    function handlePost(e) {
+        e.preventDefault();
+        setDisabled(true);
 
-                                        {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
-                                            <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
-                                        ))}
-                                    </PostDescription>}
+        if (!form.shared_link) return alert("Link input must be filled");
+
+        const token = localStorage.getItem("token");
+
+        apiPosts.publishPost(form, token)
+            .then(res => {
+                setForm({ shared_link: "", description: "" });
+                setDisabled(false);
+                setReload(!reload);
+            })
+            .catch(err => {
+                alert("There was an error publishing your link")
+                console.log(err.response.data);
+                setDisabled(false);
+            });
+    }
+
+    function handleModal(postId) {
+        setSelectedPost(postId)
+        setOpenModal(true)
+    }
+    async function handleLike(post_id) {
+        try {
+            const token = localStorage.getItem('token')
+            apiPosts.toggleLike(token, post_id)
+            const newFeed = feed.map(item => {
+                if (post_id === item.post_id) {
+                    item.isLiked ? --item.likes : ++item.likes
+                    item.isLiked = !item.isLiked
+                }
+                return item
+            })
+
+            setFeed(prev => newFeed)
+        } catch (e) {
+        }
+    }
+    return (
+        <TimelinePageContainer>
+            <FeedContainer>
+                <Title>timeline</Title>
+                <SharePostContainer data-test="publish-box" >
+                    <ImageContainer>
+                        <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
+                    </ImageContainer>
+                    <PostForm onSubmit={handlePost}>
+                        <CTA>What are you going to share today?</CTA>
+                        <LinkInput
+                            placeholder="http://..."
+                            name="shared_link"
+                            type="url"
+                            required
+                            value={form.shared_link}
+                            onChange={handleForm}
+                            disabled={disabled}
+                            data-test="link"
+                        ></LinkInput>
+                        <DescriptionInput
+                            placeholder="Awesome link about your #passion"
+                            name="description"
+                            type="text"
+                            value={form.description}
+                            onChange={handleForm}
+                            disabled={disabled}
+                            data-test="description"
+                        ></DescriptionInput>
+                        <Button type="submit" disabled={disabled} data-test="publish-btn" >{disabled ? "Publishing..." : "Publish"}</Button>
+                    </PostForm>
+                </SharePostContainer>
+                {isLoadingPage ? <NoFeed data-test="message" >Loading...</NoFeed> :
+                    !hasFriends ? "You don't follow anyone yet. Search for new friends!" : feed.length === 0 ? "No posts found from your friends" :
+                        feed.map((f, index) => {
+                            return (
+                                <PostContainer key={f.post_id} data-test="post">
+                                    <ImageLikeContainer>
+                                        <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                        <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" data-test="like-btn" />
+                                        <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)} data-test="counter" >{f.likes} Likes</p>
+                                        {likesInfo && f.likesInfo?.length > 0 && (<div data-test="tooltip">
+                                            <div></div>
+                                            <p>{f.likesInfo}</p>
+                                        </div>)}
+                                    </ImageLikeContainer>
+                                    <PostInfo>
+                                        <TopLine>
+                                            <Link to={`/user/${f.post_owner}`}>
+                                                <Username data-test="username" >{f.name}</Username>
+                                            </Link>
+                                            {(f.post_owner === Number(userId)) && <ButtonBox>
+                                                <button onClick={() => toggleEditing(index, f.description, f.post_id)} data-test="edit-btn">
+                                                    <img src={pencil} alt="Edit" />
+                                                </button>
+                                                <button onClick={() => handleModal(f.post_id)} data-test="delete-btn" >
+                                                    <img src={trashCan} alt="Delete" />
+                                                </button>
+                                            </ButtonBox>}
+                                            <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
+                                        </TopLine>
+                                        {(isEditing && index == postIndex) ?
+                                            <EditForm onSubmit={handleEditPost}>
+                                                <input
+                                                    ref={refs.current[index]}
+                                                    value={editDescription}
+                                                    onChange={(e) => setEditDescription(e.target.value)}
+                                                    onKeyDown={(e) => handleExit(e.key)}
+                                                    disabled={disabled}
+                                                />
+                                            </EditForm> :
+                                            <PostDescription data-test="description" >
+
+                                                {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                                    <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                                ))}
+                                            </PostDescription>}
 
 
-                                <Metadata href={f.shared_link} target="_blank" data-test="link">
-                                    <LinkInfo>
-                                        <LinkTitle>{f.link_title}</LinkTitle>
-                                        <LinkDescription>{f.link_description}</LinkDescription>
-                                        <LinkURL>{f.shared_link}</LinkURL>
-                                    </LinkInfo>
-                                    <LinkImage src={f.link_image}></LinkImage>
-                                </Metadata>
-                            </PostInfo>
-                        </PostContainer>
+                                        <Metadata href={f.shared_link} target="_blank" data-test="link">
+                                            <LinkInfo>
+                                                <LinkTitle>{f.link_title}</LinkTitle>
+                                                <LinkDescription>{f.link_description}</LinkDescription>
+                                                <LinkURL>{f.shared_link}</LinkURL>
+                                            </LinkInfo>
+                                            <LinkImage src={f.link_image}></LinkImage>
+                                        </Metadata>
+                                    </PostInfo>
+                                </PostContainer>
 
-                    )
-                })
-            }
-        </FeedContainer>
-        <TrendingsContainer data-test="trending" >
-            <TrendTitle>
-                trending
-            </TrendTitle>
-            {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
-                trending.map((h) =>
-                    <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)} data-test="hashtag" >
-                        {h.name}
-                    </TrendHashtags>
-                )}
-        </TrendingsContainer>
-        <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
-    </TimelinePageContainer>
-)
+                            )
+                        })
+                }
+            </FeedContainer>
+            <TrendingsContainer data-test="trending" >
+                <TrendTitle>
+                    trending
+                </TrendTitle>
+                {trending.length === 0 ? <NoFeed>Loading...</NoFeed> :
+                    trending.map((h) =>
+                        <TrendHashtags key={h.hashtag_id} onClick={() => navigate(`/hashtag/${h.name.substring(1)}`)} data-test="hashtag" >
+                            {h.name}
+                        </TrendHashtags>
+                    )}
+            </TrendingsContainer>
+            <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
+        </TimelinePageContainer>
+    )
 }
 
 
