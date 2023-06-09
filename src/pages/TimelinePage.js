@@ -280,7 +280,7 @@ export default function TimelinePage() {
                             ))
                             return (
                                 <BigContainer key={f.post_id} data-test="post">
-                                    <PostContainer key={f.post_id} data-test="post">
+                                    <PostContainer>
                                         <SideContainer>
                                             <ImageLikeContainer>
                                                 <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
