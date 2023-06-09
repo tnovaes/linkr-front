@@ -333,7 +333,13 @@ export default function TimelinePage() {
                 }
                 {isLoadingPage ? <NoFeed data-test="message" >Loading...</NoFeed> :
                     !hasFriends ? "You don't follow anyone yet. Search for new friends!" : feed.length === 0 ? "No posts found from your friends" :
-                        feed.map((f, index) => {
+                    <InfiniteScroll
+                    pageStart={0}
+                    loadMore={loadFunc}
+                    hasMore={hasMorePosts}
+                    loader={<Loading key={0}>Loading...</Loading>}
+                    threshold={0}> {
+                    feed.map((f, index) => {
                             const cm = f.comments.map((c) => {
                                 return (
                                     <Comments key={c.id}>
@@ -484,9 +490,11 @@ export default function TimelinePage() {
                                         </ComentsBox>}
                                 </BigContainer>
                             )
-                        })
-                }
-            </FeedContainer>
+                        })}
+                
+                        </InfiniteScroll>
+}
+                        </FeedContainer>
             <TrendingsContainer data-test="trending" >
                 <TrendTitle>
                     trending
