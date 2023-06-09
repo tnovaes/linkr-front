@@ -6,7 +6,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
 import heart from "../assets/heart.png";
+import papperPlane from "../assets/papperPlane.svg"
 import filledHeart from "../assets/filled-heart.png";
+import dialogBox from "../assets/dialogBox.svg"
 import pencil from "../assets/pencil.svg";
 import Modal from "../components/Modal.js";
 import reactStringReplace from 'react-string-replace';
@@ -28,6 +30,8 @@ export default function TimelinePage() {
     const [likesInfo, setLikesInfo] = useState(false);
     const [hasFriends, setHasFriends] = useState(false);
     const [isLoadingPage, setIsLoadingPage] = useState(true);
+    const [commentText, setCommentText] = useState("");
+    const [openComment, setOpenComment] = useState(false);
     const navigate = useNavigate();
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
@@ -36,12 +40,19 @@ export default function TimelinePage() {
     ])
 
     const { userProfileImage } = usePhoto();
+
     const toggleEditing = (Index, descrip, id) => {
         setpostIndex(Index);
         setSelectedPost(id)
         setEditDescription(descrip)
         setIsEditing(!isEditing);
     };
+
+    const toggleComment = (Index,id)=>{
+        setpostIndex(Index);
+        setSelectedPost(id);
+        setOpenComment(!openComment);
+    }
 
     function handleExit(chave) {
         if (chave === 'Escape') {
@@ -67,6 +78,7 @@ export default function TimelinePage() {
                 const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
                 setHasFriends(timeline.data[2].hasFriends)
                 setFeed(timelineInfo);
+                console.log(timeline)
                 setTrending(timeline.data[1]);
                 setUserId(idUser);
                 setUserToken(token);
@@ -82,6 +94,25 @@ export default function TimelinePage() {
 
     function handleForm(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    function handleComment(e) {
+        e.preventDefault();
+        setDisabled(true);
+        const body = { text: commentText };
+
+        apiPosts.postComment(userToken, body, selectedPost)
+            .then(res => {
+                setDisabled(false)
+                setCommentText("")
+                setReload(!reload)
+            })
+            .catch(err => {
+                alert("There was an error publishing your comment")
+                console.log(err.response.data);
+                setDisabled(false);
+            })
+
     }
 
     function handleEditPost(e) {
@@ -201,6 +232,7 @@ export default function TimelinePage() {
         } catch (e) {
         }
     }
+
     return (
         <TimelinePageContainer>
             <FeedContainer>
@@ -236,61 +268,94 @@ export default function TimelinePage() {
                 {isLoadingPage ? <NoFeed data-test="message" >Loading...</NoFeed> :
                     !hasFriends ? "You don't follow anyone yet. Search for new friends!" : feed.length === 0 ? "No posts found from your friends" :
                         feed.map((f, index) => {
+                            console.log(f.comments)
+                            const cm = f.comments.map((c) => (
+                                <Comments>
+                                    <ProfileImage userProfileImage={c.writer_avatar} width="50px" height="50px" />
+                                    <ComName>
+                                        <p>Nome do cara {c.is_following && <span>• following</span>}</p>
+                                        <h1>{c.text}</h1>
+                                    </ComName>
+                                </Comments>
+                            ))
                             return (
-                                <PostContainer key={f.post_id} data-test="post">
-                                    <ImageLikeContainer>
-                                        <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
-                                        <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" data-test="like-btn" />
-                                        <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)} data-test="counter" >{f.likes} Likes</p>
-                                        {likesInfo && f.likesInfo?.length > 0 && (<div data-test="tooltip">
-                                            <div></div>
-                                            <p>{f.likesInfo}</p>
-                                        </div>)}
-                                    </ImageLikeContainer>
-                                    <PostInfo>
-                                        <TopLine>
-                                            <Link to={`/user/${f.post_owner}`}>
-                                                <Username data-test="username" >{f.name}</Username>
-                                            </Link>
-                                            {(f.post_owner === Number(userId)) && <ButtonBox>
-                                                <button onClick={() => toggleEditing(index, f.description, f.post_id)} data-test="edit-btn">
-                                                    <img src={pencil} alt="Edit" />
-                                                </button>
-                                                <button onClick={() => handleModal(f.post_id)} data-test="delete-btn" >
-                                                    <img src={trashCan} alt="Delete" />
-                                                </button>
-                                            </ButtonBox>}
-                                            <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
-                                        </TopLine>
-                                        {(isEditing && index == postIndex) ?
-                                            <EditForm onSubmit={handleEditPost}>
+                                <BigContainer key={f.post_id} data-test="post">
+                                    <PostContainer key={f.post_id} data-test="post">
+                                        <SideContainer>
+                                            <ImageLikeContainer>
+                                                <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                                <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" data-test="like-btn" />
+                                                <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)} data-test="counter" >{f.likes} Likes</p>
+                                                {likesInfo && f.likesInfo?.length > 0 && (<div data-test="tooltip">
+                                                    <div></div>
+                                                    <p>{f.likesInfo}</p>
+                                                </div>)}
+                                            </ImageLikeContainer>
+                                            <DialogBox onClick={() => toggleComment(index, f.post_id)}>
+                                                <img src={dialogBox} alt="Dialog Box"></img>
+                                                <p>{f.comments.length} comments</p>
+                                            </DialogBox>
+                                        </SideContainer>
+                                        <PostInfo>
+                                            <TopLine>
+                                                <Link to={`/user/${f.post_owner}`}>
+                                                    <Username data-test="username" >{f.name}</Username>
+                                                </Link>
+                                                {(f.post_owner === Number(userId)) && <ButtonBox>
+                                                    <button onClick={() => toggleEditing(index, f.description, f.post_id)} data-test="edit-btn">
+                                                        <img src={pencil} alt="Edit" />
+                                                    </button>
+                                                    <button onClick={() => handleModal(f.post_id)} data-test="delete-btn" >
+                                                        <img src={trashCan} alt="Delete" />
+                                                    </button>
+                                                </ButtonBox>}
+                                                <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
+                                            </TopLine>
+                                            {(isEditing && Number(index) === Number(postIndex)) ?
+                                                <EditForm onSubmit={handleEditPost}>
+                                                    <input
+                                                        ref={refs.current[index]}
+                                                        value={editDescription}
+                                                        onChange={(e) => setEditDescription(e.target.value)}
+                                                        onKeyDown={(e) => handleExit(e.key)}
+                                                        disabled={disabled}
+                                                    />
+                                                </EditForm> :
+                                                <PostDescription data-test="description" >
+
+                                                    {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                                        <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                                    ))}
+                                                </PostDescription>}
+
+
+                                            <Metadata href={f.shared_link} target="_blank" data-test="link">
+                                                <LinkInfo>
+                                                    <LinkTitle>{f.link_title}</LinkTitle>
+                                                    <LinkDescription>{f.link_description}</LinkDescription>
+                                                    <LinkURL>{f.shared_link}</LinkURL>
+                                                </LinkInfo>
+                                                <LinkImage src={f.link_image}></LinkImage>
+                                            </Metadata>
+                                        </PostInfo>
+                                    </PostContainer>
+                                    {Number(index) === Number(postIndex) && openComment &&
+                                        <ComentsBox>
+                                            {cm}
+                                            <CommentForm onSubmit={handleComment}>
+                                                <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
                                                 <input
-                                                    ref={refs.current[index]}
-                                                    value={editDescription}
-                                                    onChange={(e) => setEditDescription(e.target.value)}
-                                                    onKeyDown={(e) => handleExit(e.key)}
+                                                    placeholder="write a comment..."
+                                                    value={commentText}
+                                                    onChange={(e) => setCommentText(e.target.value)}
                                                     disabled={disabled}
                                                 />
-                                            </EditForm> :
-                                            <PostDescription data-test="description" >
-
-                                                {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
-                                                    <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
-                                                ))}
-                                            </PostDescription>}
-
-
-                                        <Metadata href={f.shared_link} target="_blank" data-test="link">
-                                            <LinkInfo>
-                                                <LinkTitle>{f.link_title}</LinkTitle>
-                                                <LinkDescription>{f.link_description}</LinkDescription>
-                                                <LinkURL>{f.shared_link}</LinkURL>
-                                            </LinkInfo>
-                                            <LinkImage src={f.link_image}></LinkImage>
-                                        </Metadata>
-                                    </PostInfo>
-                                </PostContainer>
-
+                                                <button onClick={handleComment}>
+                                                    <img src={papperPlane} alt="Send Icon" />
+                                                </button>
+                                            </CommentForm>
+                                        </ComentsBox>}
+                                </BigContainer>
                             )
                         })
                 }
@@ -316,7 +381,7 @@ const ImageLikeContainer = styled.div`
 display:flex;
 flex-direction:column;
 align-items:center;
-max-width:50px;
+max-width:70px;
 margin-right:18px;
 margin-bottom:4px;
 p{
@@ -381,6 +446,26 @@ const TimelinePageContainer = styled.div`
     gap: 25px;
     @media (max-width: 936px) {
         min-width: 100%;
+    }
+`
+
+const SideContainer = styled.div`
+    max-width:70px;
+    margin-right: 10px;
+`
+
+const DialogBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    p{
+        font-family: 'Lato';
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 13px;
+        color: #FFFFFF;
     }
 `
 
@@ -551,16 +636,89 @@ const Button = styled.button`
     align-self: flex-end;
 `
 
+const CommentForm = styled.form`
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    position: relative;
+    input{
+        width: 510px;
+        min-height: 40px;
+        border-radius: 8px;
+        background-color: #252525;
+        padding-left: 15px;
+        padding-right:50px;
+    }
+
+    button{
+        position: absolute;
+        right: 15px;
+        top: 30px;
+        background-color: transparent;
+    }
+`
+
+const ComName = styled.div`
+    padding-left: 20px;
+    
+    p{
+        font: Lato;
+        font-weight: 700;
+        font-size: 14px;
+        line-height:25px;
+        color: #F3F3F3
+    }
+    span{
+        font: Lato;
+        font-weight: 400;
+        font-size: 14px;
+        line-height:25px;
+        color: #565656
+    }
+    h1{
+        font: Lato;
+        font-weight: 400;
+        font-size: 14px;
+        line-height:25px;
+        color: #ACACAC
+    }
+`
+
+const Comments = styled.div`
+    border-bottom: 1px solid #353535 ;
+    padding: 15px 0;
+    display: flex;
+`
+
+const ComentsBox = styled.div`
+    width: 100%;
+    background-color: #1E1E1E;
+    color: #F3F3F3;
+    box-sizing: border-box;
+    margin-top: -25px;
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    padding-top: 25px;
+    border-radius: 15px;
+`
+
+const BigContainer = styled.div`
+    display:flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+`
+
 const PostContainer = styled.div`
     display:flex;
+    z-index:2;
     justify-content: space-between;
     width:100%;
     background: #171717;
     border-radius: 16px;
     padding-left: 18px;
     padding: 19px;
-    margin-bottom: 16px;
-    gap: 5px;
     box-sizing: border-box;
     a{
         text-decoration: none;
