@@ -325,12 +325,12 @@ export default function TimelinePage() {
                     pageStart={0}
                     loadMore={loadFunc}
                     hasMore={hasMorePosts}
-                    loader={<Loading key={0}>Loading...</Loading>}
+                    loader={<Loading key={0} data-test="message" >Loading...</Loading>}
                     threshold={5}> {
                     feed.map((f, index) => {
                             const cm = f.comments.map((c) => {
                                 return (
-                                    <Comments key={c.id}>
+                                    <Comments key={c.id} data-test="comment">
                                         <ProfileImage userProfileImage={c.writer_id_info[0].avatar} width="50px" height="50px" />
                                         <ComName>
                                             <p>{c.writer_id_info[0].name} {(Number(c.writer_id_info[0].id) === Number(c.post_owner)) ? <span>• post’s author</span> : c.is_following && <span>• following</span>}</p>
@@ -359,9 +359,9 @@ export default function TimelinePage() {
                                                         <p>{f.likesInfo}</p>
                                                     </div>)}
                                                 </ImageLikeContainer>
-                                                <DialogBox onClick={() => toggleComment(index, f.post_id)}>
+                                                <DialogBox data-test="comment-btn" onClick={() => toggleComment(index, f.post_id)}>
                                                     <img src={dialogBox} alt="Dialog Box"></img>
-                                                    <p>{f.comments.length} comments</p>
+                                                    <p data-test="comment-counter">{f.comments.length} comments</p>
                                                 </DialogBox>
                                                 <RepostBox>
                                                     <img src={repostButton} alt="Repost Button"></img>
@@ -370,7 +370,7 @@ export default function TimelinePage() {
                                             </SideContainer>
                                             <PostInfo>
                                                 <TopLine>
-                                                    <Username>{f.original_name}</Username>
+                                                    <Username data-test="username">{f.original_name}</Username>
                                                 </TopLine>
                                                 <PostDescription data-test="description" >
                                                     {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
@@ -407,13 +407,13 @@ export default function TimelinePage() {
                                                     <p>{f.likesInfo}</p>
                                                 </div>)}
                                             </ImageLikeContainer>
-                                            <DialogBox onClick={() => toggleComment(index, f.id)}>
+                                            <DialogBox data-test="comment-btn" onClick={() => toggleComment(index, f.id)}>
                                                 <img src={dialogBox} alt="Dialog Box"></img>
-                                                <p>{f.comments.length} comments</p>
+                                                <p data-test="comment-counter" >{f.comments.length} comments</p>
                                             </DialogBox>
-                                            <RepostBox onClick={() => handleRepostModal(f.id)}>
+                                            <RepostBox data-test="repost-btn" onClick={() => handleRepostModal(f.id)}>
                                                 <img src={repostButton} alt="Repost Button"></img>
-                                                <p>{f.repost_count} re-post</p>
+                                                <p data-test="repost-counter" >{f.repost_count} re-post</p>
                                             </RepostBox>
                                             <RepostModal isOpen={openRepostModal} closeModal={() => setOpenRepostModal(!openRepostModal)} setOpenRepostModal post_id={f.id} token={userToken}></RepostModal>
                                         </SideContainer>
@@ -440,6 +440,7 @@ export default function TimelinePage() {
                                                         onChange={(e) => setEditDescription(e.target.value)}
                                                         onKeyDown={(e) => handleExit(e.key)}
                                                         disabled={disabled}
+                                                        data-test="edit-input"
                                                     />
                                                 </EditForm> :
                                                 <PostDescription data-test="description" >
@@ -461,7 +462,7 @@ export default function TimelinePage() {
                                         </PostInfo>
                                     </PostContainer>
                                     {Number(index) === Number(postIndex) && openComment &&
-                                        <ComentsBox>
+                                        <ComentsBox data-test="comment-box">
                                             {cm}
                                             <CommentForm onSubmit={handleComment}>
                                                 <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
@@ -470,8 +471,9 @@ export default function TimelinePage() {
                                                     value={commentText}
                                                     onChange={(e) => setCommentText(e.target.value)}
                                                     disabled={disabled}
+                                                    data-test="comment-input"
                                                 />
-                                                <button onClick={handleComment}>
+                                                <button data-test="comment-submit" onClick={handleComment}>
                                                     <img src={papperPlane} alt="Send Icon" />
                                                 </button>
                                             </CommentForm>
