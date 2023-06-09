@@ -7,9 +7,7 @@ import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
 import heart from "../assets/heart.png";
 import papperPlane from "../assets/papperPlane.svg";
-import papperPlane from "../assets/papperPlane.svg";
 import filledHeart from "../assets/filled-heart.png";
-import dialogBox from "../assets/dialogBox.svg";
 import dialogBox from "../assets/dialogBox.svg";
 import pencil from "../assets/pencil.svg";
 import repostButton from "../assets/repostButton.svg"
