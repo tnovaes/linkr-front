@@ -191,7 +191,7 @@ export default function UserPage() {
                             <ProfileImage userProfileImage={userPagePhoto} width="50px" height="50px" />
                             <Title>{name.name}'s posts</Title>
                         </ImageTitleContainer>
-                        <TitleButton disabled={followLoading} isFollowed={isFollowed} onClick={handleFollow}>{isFollowed ? "Unfollow" : "Follow"} </TitleButton>
+                        <TitleButton data-test="follow-btn" disabled={followLoading} isFollowed={isFollowed} onClick={handleFollow}>{isFollowed ? "Unfollow" : "Follow"} </TitleButton>
                     </TitleContainer>
                 }
                 {(carregando === false && !feed) ? <NoFeed> Sem posts </NoFeed> :
@@ -217,7 +217,7 @@ export default function UserPage() {
                                             <p>Re-posted by <span>{(f.user_id === localStorage.getItem("id")) ? "you" : f.reposter_name}</span></p>
                                         </Link>
                                     </RepostBanner>
-                                    <PostContainer key={index} data-test="post" >
+                                    <PostContainer >
                                         <SideContainer>
                                             <ImageLikeContainer>
                                                 <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
@@ -265,7 +265,7 @@ export default function UserPage() {
                         }
                         return (
                             <BigContainer key={f.post_id} data-test="post">
-                                <PostContainer key={index} data-test="post" >
+                                <PostContainer >
                                     <SideContainer>
                                         <ImageLikeContainer>
                                             <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
