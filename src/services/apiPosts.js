@@ -6,6 +6,10 @@ function getTimeline(token) {
     return axios.get(`${BASE_URL}/posts`, { headers: { Authorization: token } });
 }
 
+function getTimelinePage(token, page) {
+    return axios.get(`${BASE_URL}/posts?page=${page}`, { headers: { Authorization: token } });
+}
+
 function publishPost(body, token) {
     return axios.post(`${BASE_URL}/post`, body, { headers: { Authorization: token } });
 }
@@ -47,6 +51,6 @@ function sharePost(token, body) {
 }
 
 
-const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID, getPostsByHashtag, postEdit, getLikes, toggleLike, getPostsLikesInfo, postComment, sharePost };
+const apiPosts = { getTimeline, getTimelinePage, publishPost, getPostsByUserID, deletePostByID, getPostsByHashtag, postEdit, getLikes, toggleLike, getPostsLikesInfo, postComment};
 
 export default apiPosts;
