@@ -7,9 +7,7 @@ import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
 import heart from "../assets/heart.png";
 import papperPlane from "../assets/papperPlane.svg";
-import papperPlane from "../assets/papperPlane.svg";
 import filledHeart from "../assets/filled-heart.png";
-import dialogBox from "../assets/dialogBox.svg";
 import dialogBox from "../assets/dialogBox.svg";
 import pencil from "../assets/pencil.svg";
 import repostButton from "../assets/repostButton.svg"
@@ -803,21 +801,21 @@ const ComName = styled.div`
     padding-left: 20px;
     
     p{
-        font: Lato;
+        font-family: 'Lato';
         font-weight: 700;
         font-size: 14px;
         line-height:25px;
         color: #F3F3F3
     }
     span{
-        font: Lato;
+        font-family: 'Lato';
         font-weight: 400;
         font-size: 14px;
         line-height:25px;
         color: #565656
     }
     h1{
-        font: Lato;
+        font-family: 'Lato';
         font-weight: 400;
         font-size: 14px;
         line-height:25px;
