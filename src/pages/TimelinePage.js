@@ -801,21 +801,21 @@ const ComName = styled.div`
     padding-left: 20px;
     
     p{
-        font: Lato;
+        font-family: 'Lato';
         font-weight: 700;
         font-size: 14px;
         line-height:25px;
         color: #F3F3F3
     }
     span{
-        font: Lato;
+        font-family: 'Lato';
         font-weight: 400;
         font-size: 14px;
         line-height:25px;
         color: #565656
     }
     h1{
-        font: Lato;
+        font-family: 'Lato';
         font-weight: 400;
         font-size: 14px;
         line-height:25px;

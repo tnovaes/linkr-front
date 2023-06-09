@@ -11,6 +11,8 @@ import fallbackPhoto from '../assets/no-profile-picture-icon.svg'
 import apiAuth from "../services/apiAuth.js";
 import { usePhoto } from "../hooks/useImage.js";
 import papperPlane from "../assets/papperPlane.svg";
+import RepostModal from "../components/RepostModal.js";
+import repostButton from "../assets/repostButton.svg";
 
 export default function UserPage() {
     const { id } = useParams();
@@ -32,6 +34,7 @@ export default function UserPage() {
     const [userId, setUserId] = useState("");
     const [userToken, setUserToken] = useState("");
     const [reload, setReload] = useState(false);
+    const [openRepostModal, setOpenRepostModal] = useState(false);
 
     const { userProfileImage } = usePhoto();
 
@@ -178,6 +181,11 @@ export default function UserPage() {
 
     }
 
+    function handleRepostModal(postId) {
+        setSelectedPost(postId)
+        setOpenRepostModal(true)
+    }
+
     return (
         <TimelinePageContainer>
             <FeedContainer>
@@ -204,6 +212,61 @@ export default function UserPage() {
                                 </Comments>
                             )
                         })
+                        if (f.reposter_name) {
+                            return (
+                                <BigContainer key={f.post_id} data-test="post">
+                                    <RepostBanner>
+                                        <img src={repostButton} alt="Reposted by"></img>
+                                        <Link to={`/user/${f.post_owner}`}>
+                                            <p>Re-posted by <span>{(f.user_id === localStorage.getItem("id")) ? "you" : f.reposter_name}</span></p>
+                                        </Link>
+                                    </RepostBanner>
+                                    <PostContainer key={index} data-test="post" >
+                                        <SideContainer>
+                                            <ImageLikeContainer>
+                                                <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                                <img src={f.isLiked ? filledHeart : heart} alt="heart" data-test="like-btn" />
+                                                <p onMouseEnter={() => handleLikeHover(f.original_post_id)} onMouseOut={() => handleLikeHoverLeaving(f.original_post_id)} data-test="counter" >{f.likes} Likes</p>
+                                                {likesInfo && f.likesInfo?.length > 0 && (<div data-test="tooltip">
+                                                    <div></div>
+                                                    <p>{f.likesInfo}</p>
+                                                </div>)}
+                                            </ImageLikeContainer>
+                                            <DialogBox onClick={() => toggleComment(index, f.post_id)}>
+                                                <img src={dialogBox} alt="Dialog Box"></img>
+                                                <p>{f.comments.length} comments</p>
+                                            </DialogBox>
+                                            <RepostBox>
+                                                <img src={repostButton} alt="Repost Button"></img>
+                                                <p>{f.repost_count} re-post</p>
+                                            </RepostBox>
+                                        </SideContainer>
+                                        <PostInfo>
+                                            <TopLine>
+                                                <Username>{f.name}</Username>
+                                            </TopLine>
+                                            <PostDescription data-test="description" >
+                                                {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                                    <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                                ))}
+                                            </PostDescription>
+                                            <Metadata href={f.shared_link} target="_blank" data-test="link" >
+                                                <LinkInfo>
+                                                    <LinkTitle>{f.link_title}</LinkTitle>
+                                                    <LinkDescription>{f.link_description}</LinkDescription>
+                                                    <LinkURL>{f.shared_link}</LinkURL>
+                                                </LinkInfo>
+                                                <LinkImage src={f.link_image}></LinkImage>
+                                            </Metadata>
+                                        </PostInfo>
+                                    </PostContainer>
+                                    {Number(index) === Number(postIndex) && openComment &&
+                                        <ComentsBox>
+                                            {cm}
+                                        </ComentsBox>}
+                                </BigContainer>
+                            )
+                        }
                         return (
                             <BigContainer key={f.post_id} data-test="post">
                                 <PostContainer key={index} data-test="post" >
@@ -221,6 +284,11 @@ export default function UserPage() {
                                             <img src={dialogBox} alt="Dialog Box"></img>
                                             <p>{f.comments.length} comments</p>
                                         </DialogBox>
+                                        <RepostBox onClick={() => handleRepostModal(f.post_id)}>
+                                                <img src={repostButton} alt="Repost Button"></img>
+                                                <p>{f.repost_count} re-post</p>
+                                            </RepostBox>
+                                            <RepostModal isOpen={openRepostModal} closeModal={() => setOpenRepostModal(!openRepostModal)} setOpenRepostModal post_id={f.post_id} token={userToken}></RepostModal>
                                     </SideContainer>
                                     <PostInfo>
                                         <TopLine>
@@ -672,6 +740,7 @@ const DialogBox = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    margin-top: 15px;
 
     p{
         font-family: 'Lato';
@@ -752,5 +821,49 @@ const CommentForm = styled.form`
         right: 15px;
         top: 30px;
         background-color: transparent;
+    }
+`
+
+const RepostBanner = styled.div`
+    display:flex;
+    justify-content: left;
+    align-items: flex-start;
+    padding: 10px 13px;
+    gap:7px;
+    width:100%;
+    height:66px;
+    background: #1E1E1E;
+    border-radius: 16px;
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 13px;
+    margin-bottom:-33px;
+    a{
+        text-decoration: none;
+        color: #FFFFFF;
+    }
+`
+
+const RepostBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top:20px;
+    
+    img{
+        cursor:pointer;
+    }
+
+    p{
+        font-family: 'Lato';
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 13px;
+        color: #FFFFFF;
+        margin-top:3px;
+
     }
 `
