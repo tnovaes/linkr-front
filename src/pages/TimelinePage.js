@@ -95,18 +95,19 @@ export default function TimelinePage() {
     }, [reload, navigate])
 
     useInterval(() => {
-        const token = localStorage.getItem("token");
-        const promise = apiPosts.getTimeline(token);
-        promise.then(resposta => {
-            const newTimeLine = resposta.data[0];
-            const newFeedSize = newTimeLine[0].post_id;
-            setUpdateFeedLength(newFeedSize);
-        })
-        promise.catch(erro => {
-            //alert(erro.response.data);
-            console.log(erro.message);
-        })
-    }, 10000);
+        (async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const timeline = await apiPosts.getTimeline(token);
+                const timelineInfo = timeline.data[0];
+                const newFeedSize = timelineInfo[0].post_id;
+                setUpdateFeedLength(newFeedSize);
+            } catch (err) {
+                console.log(err.response)
+                alert("An error occurred while trying to fetch the posts, please refresh the page");
+            }
+        })()
+    }, 15000);
 
     function handleForm(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
