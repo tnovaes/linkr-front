@@ -6,9 +6,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
 import heart from "../assets/heart.png";
-import papperPlane from "../assets/papperPlane.svg"
+import papperPlane from "../assets/papperPlane.svg";
 import filledHeart from "../assets/filled-heart.png";
-import dialogBox from "../assets/dialogBox.svg"
+import dialogBox from "../assets/dialogBox.svg";
 import pencil from "../assets/pencil.svg";
 import Modal from "../components/Modal.js";
 import reactStringReplace from 'react-string-replace';
@@ -80,9 +80,9 @@ export default function TimelinePage() {
 
                 const [timeline, likedPosts] = await Promise.all([apiPosts.getTimeline(token), apiPosts.getLikes(token)])
                 const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
-                setHasFriends(timeline.data[2].hasFriends)
+                setHasFriends(timeline.data[2].hasFriends);
                 setFeed(timelineInfo);
-                setFeedLength(timelineInfo[0].post_id)
+                setFeedLength(timelineInfo[0].post_id);
                 setTrending(timeline.data[1]);
                 setUserId(idUser);
                 setUserToken(token);
@@ -294,19 +294,19 @@ export default function TimelinePage() {
                 {isLoadingPage ? <NoFeed data-test="message" >Loading...</NoFeed> :
                     !hasFriends ? "You don't follow anyone yet. Search for new friends!" : feed.length === 0 ? "No posts found from your friends" :
                         feed.map((f, index) => {
-                            //console.log(f.comments)
-                            const cm = f.comments.map((c) => (
-                                <Comments>
+                            const cm = f.comments.map((c) => {
+                                return(
+                                <Comments key={c.id}>
                                     <ProfileImage userProfileImage={c.writer_avatar} width="50px" height="50px" />
                                     <ComName>
-                                        <p>Nome do cara {c.is_following && <span>• following</span>}</p>
+                                        <p>{c.writer_name} {(Number(c.writer_id)===Number(c.post_owner)) ? <span>• post’s author</span> : c.is_following && <span>• following</span>}</p>
                                         <h1>{c.text}</h1>
                                     </ComName>
                                 </Comments>
-                            ))
+                            )})
                             return (
                                 <BigContainer key={f.post_id} data-test="post">
-                                    <PostContainer key={f.post_id} data-test="post">
+                                    <PostContainer>
                                         <SideContainer>
                                             <ImageLikeContainer>
                                                 <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />

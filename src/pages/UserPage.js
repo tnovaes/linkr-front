@@ -6,8 +6,11 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import reactStringReplace from 'react-string-replace';
 import heart from "../assets/heart.png";
 import filledHeart from "../assets/filled-heart.png";
+import dialogBox from "../assets/dialogBox.svg";
 import fallbackPhoto from '../assets/no-profile-picture-icon.svg'
 import apiAuth from "../services/apiAuth.js";
+import { usePhoto } from "../hooks/useImage.js";
+import papperPlane from "../assets/papperPlane.svg";
 
 export default function UserPage() {
     const { id } = useParams();
@@ -21,12 +24,23 @@ export default function UserPage() {
     const [oldFeed, setOldFeed] = useState([])
     const [userPagePhoto, setUserPagePhoto] = useState(fallbackPhoto)
     const navigate = useNavigate();
+    const [selectedPost, setSelectedPost] = useState(0);
+    const [postIndex, setpostIndex] = useState(0);
+    const [openComment, setOpenComment] = useState(false);
+    const [disabled, setDisabled] = useState(false);
+    const [commentText, setCommentText] = useState("");
+    const [userId, setUserId] = useState("");
+    const [userToken, setUserToken] = useState("");
+    const [reload, setReload] = useState(false);
+
+    const { userProfileImage } = usePhoto();
 
     useEffect(() => {
         setCarregando(true);
         (async () => {
             try {
-                const token = localStorage.getItem("token")
+                const token = localStorage.getItem("token");
+                const idUser = localStorage.getItem("id");
                 if (!token) return navigate("/")
                 if (!Number.isInteger(Number(id))) return navigate("/timeline")
                 // const userInfo = await apiPosts.getPostsByUserID(token, id)
@@ -43,13 +57,15 @@ export default function UserPage() {
                 setFeed(timelineInfo);
                 setTrending(userInfo.data[1]);
                 setName(arrayName[0]);
+                setUserId(idUser);
+                setUserToken(token);
                 setCarregando(false);
             } catch (err) {
                 alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [reload]);
     async function handleLikeHover(post_id) {
         const token = localStorage.getItem("token")
         let newFeed = [...feed]
@@ -137,6 +153,31 @@ export default function UserPage() {
         }
         setFollowLoading(false)
     }
+    const toggleComment = (Index, id) => {
+        setpostIndex(Index);
+        setSelectedPost(id);
+        setOpenComment(!openComment);
+    }
+
+    function handleComment(e) {
+        e.preventDefault();
+        setDisabled(true);
+        const body = { text: commentText };
+
+        apiPosts.postComment(userToken, body, selectedPost)
+            .then(res => {
+                setDisabled(false)
+                setCommentText("")
+                setReload(!reload)
+            })
+            .catch(err => {
+                alert("There was an error publishing your comment")
+                console.log(err.response.data);
+                setDisabled(false);
+            })
+
+    }
+
     return (
         <TimelinePageContainer>
             <FeedContainer>
@@ -151,37 +192,74 @@ export default function UserPage() {
                 }
                 {(carregando === false && !feed) ? <NoFeed> Sem posts </NoFeed> :
                     (carregando === false && feed) &&
-                    feed?.map((f, index) =>
-                        <PostContainer key={index} data-test="post" >
-                            <ImageLikeContainer>
-                                <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
-                                <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" />
-                                <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)}>{f.likes} Likes</p>
-                                {likesInfo && f.likesInfo?.length > 0 && (<div>
-                                    <div></div>
-                                    <p>{f.likesInfo}</p>
-                                </div>)}
-                            </ImageLikeContainer>
-                            <PostInfo>
-                                <TopLine>
-                                    <Username data-test="username" >{f.name}</Username>
-                                </TopLine>
-                                <PostDescription data-test="description" >
-                                    {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
-                                        <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
-                                    ))}
-                                </PostDescription>
-                                <Metadata href={f.shared_link} target="_blank" data-test="link" >
-                                    <LinkInfo>
-                                        <LinkTitle>{f.link_title}</LinkTitle>
-                                        <LinkDescription>{f.link_description}</LinkDescription>
-                                        <LinkURL>{f.shared_link}</LinkURL>
-                                    </LinkInfo>
-                                    <LinkImage src={f.link_image}></LinkImage>
-                                </Metadata>
-                            </PostInfo>
-                        </PostContainer>
-                    )}
+                    feed?.map((f, index) => {
+                        const cm = f.comments.map((c) => {
+                            return (
+                                <Comments key={c.id}>
+                                    <ProfileImage userProfileImage={c.writer_avatar} width="50px" height="50px" />
+                                    <ComName>
+                                        <p>{c.writer_name} {(Number(c.writer_id) === Number(c.post_owner)) ? <span>• post’s author</span> : c.is_following && <span>• following</span>}</p>
+                                        <h1>{c.text}</h1>
+                                    </ComName>
+                                </Comments>
+                            )
+                        })
+                        return (
+                            <BigContainer key={f.post_id} data-test="post">
+                                <PostContainer key={index} data-test="post" >
+                                    <SideContainer>
+                                        <ImageLikeContainer>
+                                            <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                            <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" data-test="like-btn" />
+                                            <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)} data-test="counter" >{f.likes} Likes</p>
+                                            {likesInfo && f.likesInfo?.length > 0 && (<div data-test="tooltip">
+                                                <div></div>
+                                                <p>{f.likesInfo}</p>
+                                            </div>)}
+                                        </ImageLikeContainer>
+                                        <DialogBox onClick={() => toggleComment(index, f.post_id)}>
+                                            <img src={dialogBox} alt="Dialog Box"></img>
+                                            <p>{f.comments.length} comments</p>
+                                        </DialogBox>
+                                    </SideContainer>
+                                    <PostInfo>
+                                        <TopLine>
+                                            <Username data-test="username" >{f.name}</Username>
+                                        </TopLine>
+                                        <PostDescription data-test="description" >
+                                            {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                                <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                            ))}
+                                        </PostDescription>
+                                        <Metadata href={f.shared_link} target="_blank" data-test="link" >
+                                            <LinkInfo>
+                                                <LinkTitle>{f.link_title}</LinkTitle>
+                                                <LinkDescription>{f.link_description}</LinkDescription>
+                                                <LinkURL>{f.shared_link}</LinkURL>
+                                            </LinkInfo>
+                                            <LinkImage src={f.link_image}></LinkImage>
+                                        </Metadata>
+                                    </PostInfo>
+                                </PostContainer>
+                                {Number(index) === Number(postIndex) && openComment &&
+                                    <ComentsBox>
+                                        {cm}
+                                        <CommentForm onSubmit={handleComment}>
+                                            <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
+                                            <input
+                                                placeholder="write a comment..."
+                                                value={commentText}
+                                                onChange={(e) => setCommentText(e.target.value)}
+                                                disabled={disabled}
+                                            />
+                                            <button onClick={handleComment}>
+                                                <img src={papperPlane} alt="Send Icon" />
+                                            </button>
+                                        </CommentForm>
+                                    </ComentsBox>}
+                            </BigContainer>
+                        )
+                    })}
             </FeedContainer>
             <TrendingsContainer>
                 <TrendTitle>
@@ -244,13 +322,11 @@ transition: all 0.1s linear;
     }
 `
 
-
-
 const ImageLikeContainer = styled.div`
 display:flex;
 flex-direction:column;
 align-items:center;
-max-width:50px;
+max-width:70px;
 margin-right:18px;
 margin-bottom:4px;
 p{
@@ -360,30 +436,32 @@ const PostInfo = styled.div`
 `
 
 const PostContainer = styled.div`
-    display:flex;
-    justify-content: space-between;
-    width:100%;
-    background: #171717;
-    border-radius: 16px;
-    padding: 19px;
-    margin-bottom: 16px;
-    gap: 5px;
-    box-sizing: border-box;
+display:flex;
+z-index:2;
+justify-content: space-between;
+width:100%;
+background: #171717;
+border-radius: 16px;
+padding-left: 18px;
+padding: 19px;
+box-sizing: border-box;
+a{
+    text-decoration: none;
+}
+button{
+    visibility: hidden;
+}
+:hover{
     button{
-        visibility: hidden;
+        visibility:visible;
     }
-
-    :hover{
-        button{
-            visibility:visible;
-        }
-    }
-    @media (max-width: 611px) {
-    border-radius: 0px;
-    max-width: 100vw;
-    justify-content: center;
-    margin-bottom: 0;
-    }
+}
+@media (max-width: 611px) {
+border-radius: 0px;
+max-width: 100%;
+justify-content: center;
+margin: 0;
+}
 `
 
 const TopLine = styled.div`
@@ -581,5 +659,98 @@ const TrendHashtags = styled.div`
     margin: 5px 0 ;
     :hover {
         cursor:pointer;
+    }
+`
+
+const SideContainer = styled.div`
+    max-width:70px;
+    margin-right: 10px;
+`
+
+const DialogBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    p{
+        font-family: 'Lato';
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 13px;
+        color: #FFFFFF;
+    }
+`
+
+const BigContainer = styled.div`
+    display:flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+`
+
+const Comments = styled.div`
+    border-bottom: 1px solid #353535 ;
+    padding: 15px 0;
+    display: flex;
+`
+const ComName = styled.div`
+    padding-left: 20px;
+    
+    p{
+        font: Lato;
+        font-weight: 700;
+        font-size: 14px;
+        line-height:25px;
+        color: #F3F3F3
+    }
+    span{
+        font: Lato;
+        font-weight: 400;
+        font-size: 14px;
+        line-height:25px;
+        color: #565656
+    }
+    h1{
+        font: Lato;
+        font-weight: 400;
+        font-size: 14px;
+        line-height:25px;
+        color: #ACACAC
+    }
+`
+
+const ComentsBox = styled.div`
+    width: 100%;
+    background-color: #1E1E1E;
+    color: #F3F3F3;
+    box-sizing: border-box;
+    margin-top: -25px;
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    padding-top: 25px;
+    border-radius: 15px;
+`
+
+const CommentForm = styled.form`
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    position: relative;
+    input{
+        width: 510px;
+        min-height: 40px;
+        border-radius: 8px;
+        background-color: #252525;
+        padding-left: 15px;
+        padding-right:50px;
+    }
+
+    button{
+        position: absolute;
+        right: 15px;
+        top: 30px;
+        background-color: transparent;
     }
 `
