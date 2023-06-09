@@ -6,13 +6,15 @@ import React, { useEffect, useRef, useState } from "react";
 import { usePhoto } from "../hooks/useImage.js";
 import trashCan from "../assets/trash.svg";
 import heart from "../assets/heart.png";
-import papperPlane from "../assets/papperPlane.svg"
+import papperPlane from "../assets/papperPlane.svg";
 import filledHeart from "../assets/filled-heart.png";
-import dialogBox from "../assets/dialogBox.svg"
+import dialogBox from "../assets/dialogBox.svg";
 import pencil from "../assets/pencil.svg";
+import repostButton from "../assets/repostButton.svg"
 import Modal from "../components/Modal.js";
 import reactStringReplace from 'react-string-replace';
 import useInterval from "use-interval";
+import RepostModal from "../components/RepostModal.js";
 import InfiniteScroll from "react-infinite-scroller";
 
 export default function TimelinePage() {
@@ -24,6 +26,7 @@ export default function TimelinePage() {
     const [userToken, setUserToken] = useState("");
     const [reload, setReload] = useState(false);
     const [openModal, setOpenModal] = useState(false);
+    const [openRepostModal, setOpenRepostModal] = useState(false);
     const [selectedPost, setSelectedPost] = useState(0);
     const [postIndex, setpostIndex] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
@@ -81,9 +84,9 @@ export default function TimelinePage() {
 
                 const [timeline, likedPosts] = await Promise.all([apiPosts.getTimeline(token), apiPosts.getLikes(token)])
                 const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
-                setHasFriends(timeline.data[2].hasFriends)
+                setHasFriends(timeline.data[2].hasFriends);
                 setFeed(timelineInfo);
-                setFeedLength(timelineInfo[0].post_id)
+                setFeedLength(timelineInfo[0].post_id);
                 setTrending(timeline.data[1]);
                 setUserId(idUser);
                 setUserToken(token);
@@ -168,6 +171,7 @@ export default function TimelinePage() {
                 setDisabled(false);
             });
     }
+
     async function handleLikeHover(post_id) {
         const token = localStorage.getItem("token")
         let newFeed = [...feed]
@@ -227,6 +231,7 @@ export default function TimelinePage() {
         setFeed(prev => [...oldFeed])
         setLikesInfo(false)
     }
+
     function handlePost(e) {
         e.preventDefault();
         setDisabled(true);
@@ -252,6 +257,12 @@ export default function TimelinePage() {
         setSelectedPost(postId)
         setOpenModal(true)
     }
+
+    function handleRepostModal(postId) {
+        setSelectedPost(postId)
+        setOpenRepostModal(true)
+    }
+
     async function handleLike(post_id) {
         try {
             const token = localStorage.getItem('token')
@@ -272,6 +283,7 @@ export default function TimelinePage() {
     function showNewPosts() {
         window.location.reload(true);
     }
+
 
     return (
         <TimelinePageContainer>
@@ -412,20 +424,76 @@ export default function TimelinePage() {
                         >
                             {
                                 feed.map((f, index) => {
-                                    //console.log(f.comments)
-                                    const cm = f.comments.map((c) => (
-                                        <Comments>
-                                            <ProfileImage userProfileImage={c.writer_avatar} width="50px" height="50px" />
-                                            <ComName>
-                                                <p>Nome do cara {c.is_following && <span>• following</span>}</p>
-                                                <h1>{c.text}</h1>
-                                            </ComName>
-                                        </Comments>
-                                    ))
-                                    return (
-                                        <BigContainer key={f.post_id} data-test="post">
-                                            <PostContainer key={f.post_id} data-test="post">
-                                                <SideContainer>
+                                            const cm = f.comments.map((c) => {
+                                return (
+                                            <Comments key={c.id}>
+                                                <ProfileImage userProfileImage={c.writer_avatar} width="50px" height="50px" />
+                                                <ComName>
+                                                    <p>{c.writer_name} {(Number(c.writer_id) === Number(c.post_owner)) ? <span>• post’s author</span> : c.is_following && <span>• following</span>}</p>
+                                                    <h1>{c.text}</h1>
+                                                </ComName>
+                                            </Comments>
+                                        )
+                            })
+                            if (f.reposter_name) {
+                                        return (
+                                            <BigContainer key={f.post_id} data-test="post">
+                                                <RepostBanner>
+                                            <img src={repostButton} alt="Reposted by"></img>
+                                            <Link to={`/user/${f.post_owner}`}>
+                                                <p>Re-posted by <span>{(f.user_id === localStorage.getItem("id")) ? "you" : f.reposter_name}</span></p>
+                                            </Link>
+                                        </RepostBanner>
+                                        <PostContainer>
+                                            <SideContainer>
+                                                <ImageLikeContainer>
+                                                    <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                                    <img src={f.isLiked ? filledHeart : heart} alt="heart" />
+                                                    <p onMouseEnter={() => handleLikeHover(f.original_post_id)} onMouseOut={() => handleLikeHoverLeaving(f.original_post_id)} data-test="counter" >{f.likes} Likes</p>
+                                                    {likesInfo && f.likesInfo?.length > 0 && (<div data-test="tooltip">
+                                                        <div></div>
+                                                        <p>{f.likesInfo}</p>
+                                                    </div>)}
+                                                </ImageLikeContainer>
+                                                <DialogBox onClick={() => toggleComment(index, f.post_id)}>
+                                                    <img src={dialogBox} alt="Dialog Box"></img>
+                                                    <p>{f.comments.length} comments</p>
+                                                </DialogBox>
+                                                <RepostBox>
+                                                    <img src={repostButton} alt="Repost Button"></img>
+                                                    <p>{f.repost_count} re-post</p>
+                                                </RepostBox>
+                                            </SideContainer>
+                                            <PostInfo>
+                                                <TopLine>
+                                                    <Username>{f.name}</Username>
+                                                </TopLine>
+                                                <PostDescription data-test="description" >
+                                                    {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                                        <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                                    ))}
+                                                </PostDescription>
+                                                <Metadata href={f.shared_link} target="_blank" data-test="link">
+                                                    <LinkInfo>
+                                                        <LinkTitle>{f.link_title}</LinkTitle>
+                                                        <LinkDescription>{f.link_description}</LinkDescription>
+                                                        <LinkURL>{f.shared_link}</LinkURL>
+                                                    </LinkInfo>
+                                                    <LinkImage src={f.link_image}></LinkImage>
+                                                </Metadata>
+                                            </PostInfo>
+                                        </PostContainer>
+                                        {Number(index) === Number(postIndex) && openComment &&
+                                            <ComentsBox>
+                                                {cm}
+                                            </ComentsBox>}
+                                    </BigContainer>)
+                            }
+
+                            return (
+                                <BigContainer key={f.post_id} data-test="post">
+                                            <PostContainer>
+                                        <SideContainer>
                                                     <ImageLikeContainer>
                                                         <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
                                                         <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" data-test="like-btn" />
@@ -439,7 +507,12 @@ export default function TimelinePage() {
                                                         <img src={dialogBox} alt="Dialog Box"></img>
                                                         <p>{f.comments.length} comments</p>
                                                     </DialogBox>
-                                                </SideContainer>
+                                                    <RepostBox onClick={() => handleRepostModal(f.post_id)}>
+                                                <img src={repostButton} alt="Repost Button"></img>
+                                                <p>{f.repost_count} re-post</p>
+                                            </RepostBox>
+                                            <RepostModal isOpen={openRepostModal} closeModal={() => setOpenRepostModal(!openRepostModal)} setOpenRepostModal post_id={f.post_id} token={userToken}></RepostModal>
+                                        </SideContainer>
                                                 <PostInfo>
                                                     <TopLine>
                                                         <Link to={`/user/${f.post_owner}`}>
@@ -625,6 +698,10 @@ const DialogBox = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    margin-top:15px;
+    img{
+        cursor:pointer;
+    }
 
     p{
         font-family: 'Lato';
@@ -634,6 +711,29 @@ const DialogBox = styled.div`
         color: #FFFFFF;
     }
 `
+
+const RepostBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top:20px;
+    
+    img{
+        cursor:pointer;
+    }
+
+    p{
+        font-family: 'Lato';
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 13px;
+        color: #FFFFFF;
+        margin-top:3px;
+
+    }
+`
+
 
 const FeedContainer = styled.div`
     display: flex;
@@ -829,21 +929,21 @@ const ComName = styled.div`
     padding-left: 20px;
     
     p{
-        font: Lato;
+        font-family: 'Lato';
         font-weight: 700;
         font-size: 14px;
         line-height:25px;
         color: #F3F3F3
     }
     span{
-        font: Lato;
+        font-family: 'Lato';
         font-weight: 400;
         font-size: 14px;
         line-height:25px;
         color: #565656
     }
     h1{
-        font: Lato;
+        font-family: 'Lato';
         font-weight: 400;
         font-size: 14px;
         line-height:25px;
@@ -855,6 +955,11 @@ const Comments = styled.div`
     border-bottom: 1px solid #353535 ;
     padding: 15px 0;
     display: flex;
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 17px;
 `
 
 const ComentsBox = styled.div`
@@ -1092,6 +1197,29 @@ const ButtonBox = styled.div`
         background-color: transparent;
     }
 `
+
+const RepostBanner = styled.div`
+    display:flex;
+    justify-content: left;
+    align-items: flex-start;
+    padding: 10px 13px;
+    gap:7px;
+    width:100%;
+    height:66px;
+    background: #1E1E1E;
+    border-radius: 16px;
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 13px;
+    margin-bottom:-33px;
+    a{
+        text-decoration: none;
+        color: #FFFFFF;
+    }
+`
+
 
 
 
