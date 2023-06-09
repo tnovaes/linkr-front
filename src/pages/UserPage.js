@@ -238,12 +238,10 @@ width:100%;
 height:31px;
 transition: all 0.1s linear;
 @media (min-width: 936px) {
-        position:fixed;
-        top:165px;
-        left:calc(50% + 353px);
+        position:absolute;
+        top:16px;
+        right:-326px;
     }
-
-
 `
 
 
