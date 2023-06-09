@@ -4,25 +4,27 @@ import { useEffect, useState } from "react";
 import { ThreeDots } from "react-loader-spinner";
 import { useNavigate } from "react-router-dom";
 
-export default function Modal({ isOpen, closeModal, token, post_id }) {
+export default function RepostModal({ isOpen, closeModal, token, post_id }) {
     const [load, setLoad] = useState(false);
     const navigate = useNavigate()
 
     useEffect(() => {
         setLoad(false)
     }, [isOpen])
-    async function deletePost(token, id) {
+
+    async function handleRepost(token, post_id) {
+        const body = { post_id: post_id }
         try {
-            setLoad(true)
-            const promisse = await apiPosts.deletePostByID(token,id);
+            setLoad(true);
+            const promisse = await apiPosts.sharePost(token, body);
             if (promisse.status === 200) {
-                setLoad(false)
-                navigate(0)
+                setLoad(false);
+                navigate(0);
             }
         } catch (err) {
-            console.log(err.response)
-            alert("An error occurred while trying to delete the posts, please refresh the page");
-            navigate(0)
+            console.log(err.response);
+            alert("There was an error sharing this post, please refresh the page");
+            navigate(0);
         }
     }
 
@@ -31,12 +33,12 @@ export default function Modal({ isOpen, closeModal, token, post_id }) {
             <ModalBack>
                 <ModalContent>
                     <Confirmation>
-                        Are you sure you want<br />
-                        to delete this post?
+                        Do you want to re-post<br />
+                        this link?
                     </Confirmation>
                     <Buttons>
-                        <ButtonA onClick={closeModal} data-test="cancel" >No, go back</ButtonA>
-                        <ButtonB onClick={() => deletePost(token, post_id)} data-test="confirm" >{load ? <ThreeDots width={50} /> : "Yes, delete it"}</ButtonB>
+                        <ButtonA onClick={closeModal} data-test="cancel" >No, cancel</ButtonA>
+                        <ButtonB onClick={() => handleRepost(token, post_id)} data-test="confirm" >{load ? <ThreeDots width={50} /> : "Yes, share!"}</ButtonB>
                     </Buttons>
                 </ModalContent>
             </ModalBack>
