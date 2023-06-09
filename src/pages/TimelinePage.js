@@ -10,6 +10,7 @@ import filledHeart from "../assets/filled-heart.png";
 import pencil from "../assets/pencil.svg";
 import Modal from "../components/Modal.js";
 import reactStringReplace from 'react-string-replace';
+import useInterval from "use-interval";
 
 export default function TimelinePage() {
     const [feed, setFeed] = useState();
@@ -29,6 +30,9 @@ export default function TimelinePage() {
     const [hasFriends, setHasFriends] = useState(false);
     const [isLoadingPage, setIsLoadingPage] = useState(true);
     const navigate = useNavigate();
+    const [updateFeedLength, setUpdateFeedLength] = useState(0);
+    const [feedLength, setFeedLength] = useState(0);
+
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
@@ -67,18 +71,34 @@ export default function TimelinePage() {
                 const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
                 setHasFriends(timeline.data[2].hasFriends)
                 setFeed(timelineInfo);
+                setFeedLength(timelineInfo[0].post_id)
                 setTrending(timeline.data[1]);
                 setUserId(idUser);
                 setUserToken(token);
-                setIsLoadingPage(false)
-
-
+                setIsLoadingPage(false);
             } catch (err) {
                 console.log(err.response)
                 alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
     }, [reload, navigate])
+
+    useInterval(() => {
+        const token = localStorage.getItem("token");
+        const promise = apiPosts.getTimeline(token);
+        promise.then(resposta => {
+            const newTimeLine = resposta.data[0];
+            const newFeedSize = newTimeLine[0].post_id;
+            console.log(newTimeLine[0].post_id);
+            console.log(newFeedSize, feedLength)
+            setUpdateFeedLength(newFeedSize);
+            console.log(updateFeedLength - feedLength)
+        })
+        promise.catch(erro => {
+            //alert(erro.response.data);
+            console.log(erro.message);
+        })
+    }, 10000);
 
     function handleForm(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -201,6 +221,11 @@ export default function TimelinePage() {
         } catch (e) {
         }
     }
+
+    function showNewPosts() {
+        window.location.reload(true);
+    }
+
     return (
         <TimelinePageContainer>
             <FeedContainer>
@@ -233,6 +258,11 @@ export default function TimelinePage() {
                         <Button type="submit" disabled={disabled} data-test="publish-btn" >{disabled ? "Publishing..." : "Publish"}</Button>
                     </PostForm>
                 </SharePostContainer>
+                {(feedLength !== 0 && updateFeedLength - feedLength > 0) &&
+                    <NewPosts onClick={showNewPosts}>
+                        {updateFeedLength - feedLength} new posts, load more!
+                    </NewPosts>
+                }
                 {isLoadingPage ? <NoFeed data-test="message" >Loading...</NoFeed> :
                     !hasFriends ? "You don't follow anyone yet. Search for new friends!" : feed.length === 0 ? "No posts found from your friends" :
                         feed.map((f, index) => {
@@ -310,6 +340,19 @@ export default function TimelinePage() {
         </TimelinePageContainer>
     )
 }
+
+const NewPosts = styled.button`
+    background-color: red;
+    margin: 0 auto;
+    margin-bottom: 20px;
+    background-color: #1877F2;
+    height: 61px;
+    width: 100%;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    @media (max-width: 611px) {
+        margin: 0 auto;
+    }
+`
 
 
 const ImageLikeContainer = styled.div`
