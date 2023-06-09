@@ -16,7 +16,7 @@ import reactStringReplace from 'react-string-replace';
 import useInterval from "use-interval";
 import RepostModal from "../components/RepostModal.js";
 import axios from "axios";
-
+import InfiniteScroll from 'react-infinite-scroller'
 export default function TimelinePage() {
     const [feed, setFeed] = useState();
     const [trending, setTrending] = useState([]);
@@ -42,11 +42,7 @@ export default function TimelinePage() {
     const [feedLength, setFeedLength] = useState(0);
     const [hasMorePosts, setHasMorePosts] = useState(true);
 
-    const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
-    React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
-    React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
-    React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef()
-    ])
+    const refs = useRef(new Array(feed?.length).fill(React.createRef()))
 
     const { userProfileImage } = usePhoto();
 
@@ -85,20 +81,15 @@ export default function TimelinePage() {
                 const timeline = await apiPosts.getTimeline(token)
                 const shared_links = {shared_links: timeline?.data?.posts?.map(item=> ({url: item.shared_link, id: item.id}))}
                 const [fetched, likedPosts] = await Promise.all([await axios.post(process.env.REACT_APP_METADATA_API, shared_links), apiPosts.getLikes(token)])
-                console.log(likedPosts.data)
                 const timelinePosts = timeline.data.posts.map((item,i)=> ({...item, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(item.id)), metadata: fetched.data[i].metadata}))
-                console.log(timelinePosts)
                 setHasFriends(timeline.data.hasFriendsAsFollowed);
                 setFeed(timelinePosts);
-                console.log(timelinePosts)
                 setFeedLength(timelinePosts[0].post_id);
                 setTrending(timeline.data.hashtag_count);
                 setUserId(idUser);
                 setUserToken(token);
                 setIsLoadingPage(false);
             } catch (err) {
-                console.log(err)
-                console.log(err.response)
                 alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
@@ -109,11 +100,8 @@ export default function TimelinePage() {
             try {
                 const token = localStorage.getItem("token");
                 const timeline = await apiPosts.getTimeline(token);
-                console.log("interval timline", timeline.data.posts)
                 const timelineInfo = timeline.data.posts;
-                console.log("info",timelineInfo)
                 const newFeedSize = timelineInfo.id;
-                console.log("newfeed", newFeedSize)
                 setUpdateFeedLength(()=>newFeedSize);
             } catch (err) {
                 console.log(err.response)
@@ -125,16 +113,16 @@ export default function TimelinePage() {
     function loadFunc(page) {
         (async () => {
             try {
-                console.log(page)
-                console.log("load func")
                 const token = localStorage.getItem("token");
                 if (!token) return navigate("/");
-                const [timeline, likedPosts] = await Promise.all([apiPosts.getTimelinePage(token, page), apiPosts.getLikes(token)])
-                const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
-                setFeed([...feed, ...timelineInfo]);
-                setHasMorePosts(timelineInfo.length < 10 ? false : true);
+
+                const timeline = await apiPosts.getTimelinePage(token, page)
+                const shared_links = {shared_links: timeline?.data?.posts?.map(item=> ({url: item.shared_link, id: item.id}))}
+                const [fetched, likedPosts] = await Promise.all([await axios.post(process.env.REACT_APP_METADATA_API, shared_links), apiPosts.getLikes(token)])
+                const timelinePosts = timeline.data.posts.map((item,i)=> ({...item, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(item.id)), metadata: fetched.data[i].metadata}))
+                setFeed(()=>([...feed, ...timelinePosts]));
+                setHasMorePosts(()=>timelinePosts.length < 10 ? false : true);
             } catch (err) {
-                console.log(page)
                 alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
@@ -338,7 +326,7 @@ export default function TimelinePage() {
                     loadMore={loadFunc}
                     hasMore={hasMorePosts}
                     loader={<Loading key={0}>Loading...</Loading>}
-                    threshold={0}> {
+                    threshold={5}> {
                     feed.map((f, index) => {
                             const cm = f.comments.map((c) => {
                                 return (
@@ -510,7 +498,13 @@ export default function TimelinePage() {
         </TimelinePageContainer>
     )
 }
-
+const Loading = styled.div`
+  //font-family: "Oswald", sans-serif;
+  font-size: 28px;
+  text-align: center;
+  margin: 15px auto;
+  color: #FFFFFF;
+`
 const NewPosts = styled.button`
     background-color: red;
     margin: 0 auto;

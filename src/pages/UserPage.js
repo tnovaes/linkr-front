@@ -46,16 +46,12 @@ export default function UserPage() {
                 const idUser = localStorage.getItem("id");
                 if (!token) return navigate("/")
                 if (!Number.isInteger(Number(id))) return navigate("/timeline")
-                // const userInfo = await apiPosts.getPostsByUserID(token, id)
                 const [userInfo, likedPosts, IsFollowing] = await Promise.all([apiPosts.getPostsByUserID(token, id), apiPosts.getLikes(token), apiAuth.getIsFollowing(token, id)])
                 const timelineInfo = userInfo.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
                 const arrayName = userInfo.data[2];
-                if (timelineInfo.length > 0) {
-                    setUserPagePhoto(timelineInfo[0].avatar)
-                } else {
-                    const photoUrl = await apiAuth.getUserPhoto(token, id)
-                    setUserPagePhoto(photoUrl[0].avatar)
-                }
+                const photoUrl = await apiAuth.getUserPhoto(token, id)
+                setUserPagePhoto(photoUrl.data.avatar)
+                // }
                 setIsFollowed(IsFollowing.data)
                 setFeed(timelineInfo);
                 setTrending(userInfo.data[1]);
@@ -285,10 +281,10 @@ export default function UserPage() {
                                             <p>{f.comments.length} comments</p>
                                         </DialogBox>
                                         <RepostBox onClick={() => handleRepostModal(f.post_id)}>
-                                                <img src={repostButton} alt="Repost Button"></img>
-                                                <p>{f.repost_count} re-post</p>
-                                            </RepostBox>
-                                            <RepostModal isOpen={openRepostModal} closeModal={() => setOpenRepostModal(!openRepostModal)} setOpenRepostModal post_id={f.post_id} token={userToken}></RepostModal>
+                                            <img src={repostButton} alt="Repost Button"></img>
+                                            <p>{f.repost_count} re-post</p>
+                                        </RepostBox>
+                                        <RepostModal isOpen={openRepostModal} closeModal={() => setOpenRepostModal(!openRepostModal)} setOpenRepostModal post_id={f.post_id} token={userToken}></RepostModal>
                                     </SideContainer>
                                     <PostInfo>
                                         <TopLine>
