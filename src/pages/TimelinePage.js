@@ -40,6 +40,7 @@ export default function TimelinePage() {
     const navigate = useNavigate();
     const [updateFeedLength, setUpdateFeedLength] = useState(0);
     const [feedLength, setFeedLength] = useState(0);
+    const [hasMorePosts, setHasMorePosts] = useState(true);
 
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
@@ -121,6 +122,23 @@ export default function TimelinePage() {
         })()
     }, 15000);
 
+    function loadFunc(page) {
+        (async () => {
+            try {
+                console.log(page)
+                console.log("load func")
+                const token = localStorage.getItem("token");
+                if (!token) return navigate("/");
+                const [timeline, likedPosts] = await Promise.all([apiPosts.getTimelinePage(token, page), apiPosts.getLikes(token)])
+                const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
+                setFeed([...feed, ...timelineInfo]);
+                setHasMorePosts(timelineInfo.length < 10 ? false : true);
+            } catch (err) {
+                console.log(page)
+                alert("An error occurred while trying to fetch the posts, please refresh the page");
+            }
+        })()
+    };
     function handleForm(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
