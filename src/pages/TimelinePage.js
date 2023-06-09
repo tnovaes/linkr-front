@@ -12,6 +12,7 @@ import dialogBox from "../assets/dialogBox.svg"
 import pencil from "../assets/pencil.svg";
 import Modal from "../components/Modal.js";
 import reactStringReplace from 'react-string-replace';
+import useInterval from "use-interval";
 
 export default function TimelinePage() {
     const [feed, setFeed] = useState();
@@ -33,6 +34,9 @@ export default function TimelinePage() {
     const [commentText, setCommentText] = useState("");
     const [openComment, setOpenComment] = useState(false);
     const navigate = useNavigate();
+    const [updateFeedLength, setUpdateFeedLength] = useState(0);
+    const [feedLength, setFeedLength] = useState(0);
+
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
@@ -78,19 +82,32 @@ export default function TimelinePage() {
                 const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
                 setHasFriends(timeline.data[2].hasFriends)
                 setFeed(timelineInfo);
-                console.log(timeline)
+                setFeedLength(timelineInfo[0].post_id)
                 setTrending(timeline.data[1]);
                 setUserId(idUser);
                 setUserToken(token);
-                setIsLoadingPage(false)
-
-
+                setIsLoadingPage(false);
             } catch (err) {
                 console.log(err.response)
                 alert("An error occurred while trying to fetch the posts, please refresh the page");
             }
         })()
     }, [reload, navigate])
+
+    useInterval(() => {
+        (async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const timeline = await apiPosts.getTimeline(token);
+                const timelineInfo = timeline.data[0];
+                const newFeedSize = timelineInfo[0].post_id;
+                setUpdateFeedLength(newFeedSize);
+            } catch (err) {
+                console.log(err.response)
+                alert("An error occurred while trying to fetch the posts, please refresh the page");
+            }
+        })()
+    }, 15000);
 
     function handleForm(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -233,6 +250,10 @@ export default function TimelinePage() {
         }
     }
 
+    function showNewPosts() {
+        window.location.reload(true);
+    }
+
     return (
         <TimelinePageContainer>
             <FeedContainer>
@@ -265,10 +286,15 @@ export default function TimelinePage() {
                         <Button type="submit" disabled={disabled} data-test="publish-btn" >{disabled ? "Publishing..." : "Publish"}</Button>
                     </PostForm>
                 </SharePostContainer>
+                {(feedLength !== 0 && updateFeedLength - feedLength > 0) &&
+                    <NewPosts onClick={showNewPosts}>
+                        {updateFeedLength - feedLength} new posts, load more!
+                    </NewPosts>
+                }
                 {isLoadingPage ? <NoFeed data-test="message" >Loading...</NoFeed> :
                     !hasFriends ? "You don't follow anyone yet. Search for new friends!" : feed.length === 0 ? "No posts found from your friends" :
                         feed.map((f, index) => {
-                            console.log(f.comments)
+                            //console.log(f.comments)
                             const cm = f.comments.map((c) => (
                                 <Comments>
                                     <ProfileImage userProfileImage={c.writer_avatar} width="50px" height="50px" />
@@ -375,6 +401,19 @@ export default function TimelinePage() {
         </TimelinePageContainer>
     )
 }
+
+const NewPosts = styled.button`
+    background-color: red;
+    margin: 0 auto;
+    margin-bottom: 20px;
+    background-color: #1877F2;
+    height: 61px;
+    width: 100%;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    @media (max-width: 611px) {
+        margin: 0 auto;
+    }
+`
 
 
 const ImageLikeContainer = styled.div`
