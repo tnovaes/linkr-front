@@ -13,6 +13,7 @@ import pencil from "../assets/pencil.svg";
 import Modal from "../components/Modal.js";
 import reactStringReplace from 'react-string-replace';
 import useInterval from "use-interval";
+import InfiniteScroll from "react-infinite-scroller";
 
 export default function TimelinePage() {
     const [feed, setFeed] = useState();
@@ -36,6 +37,7 @@ export default function TimelinePage() {
     const navigate = useNavigate();
     const [updateFeedLength, setUpdateFeedLength] = useState(0);
     const [feedLength, setFeedLength] = useState(0);
+    const [hasMorePosts, setHasMorePosts] = useState(true);
 
     const refs = useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
     React.createRef(), React.createRef(), React.createRef(), React.createRef(), React.createRef(),
@@ -52,7 +54,7 @@ export default function TimelinePage() {
         setIsEditing(!isEditing);
     };
 
-    const toggleComment = (Index,id)=>{
+    const toggleComment = (Index, id) => {
         setpostIndex(Index);
         setSelectedPost(id);
         setOpenComment(!openComment);
@@ -69,7 +71,6 @@ export default function TimelinePage() {
             refs.current[postIndex].current.focus();
         }
     }, [isEditing, postIndex]);
-
 
     useEffect(() => {
         (async () => {
@@ -108,6 +109,24 @@ export default function TimelinePage() {
             }
         })()
     }, 15000);
+
+    function loadFunc(page) {
+        (async () => {
+            try {
+                console.log(page)
+                console.log("load func")
+                const token = localStorage.getItem("token");
+                if (!token) return navigate("/");
+                const [timeline, likedPosts] = await Promise.all([apiPosts.getTimelinePage(token, page), apiPosts.getLikes(token)])
+                const timelineInfo = timeline.data[0].map(post => ({ ...post, isLiked: likedPosts.data.some(like => Number(like.post_id) === Number(post.post_id)) }))
+                setFeed([...feed, ...timelineInfo]);
+                setHasMorePosts(timelineInfo.length < 10 ? false : true);
+            } catch (err) {
+                console.log(page)
+                alert("An error occurred while trying to fetch the posts, please refresh the page");
+            }
+        })()
+    };
 
     function handleForm(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -293,7 +312,7 @@ export default function TimelinePage() {
                 }
                 {isLoadingPage ? <NoFeed data-test="message" >Loading...</NoFeed> :
                     !hasFriends ? "You don't follow anyone yet. Search for new friends!" : feed.length === 0 ? "No posts found from your friends" :
-                        feed.map((f, index) => {
+                        /* feed.map((f, index) => {
                             //console.log(f.comments)
                             const cm = f.comments.map((c) => (
                                 <Comments>
@@ -348,13 +367,13 @@ export default function TimelinePage() {
                                                     />
                                                 </EditForm> :
                                                 <PostDescription data-test="description" >
-
+    
                                                     {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
                                                         <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
                                                     ))}
                                                 </PostDescription>}
-
-
+    
+    
                                             <Metadata href={f.shared_link} target="_blank" data-test="link">
                                                 <LinkInfo>
                                                     <LinkTitle>{f.link_title}</LinkTitle>
@@ -383,8 +402,109 @@ export default function TimelinePage() {
                                         </ComentsBox>}
                                 </BigContainer>
                             )
-                        })
+                        }) */
+                        <InfiniteScroll
+                            pageStart={0}
+                            loadMore={loadFunc}
+                            hasMore={hasMorePosts}
+                            loader={<Loading key={0}>Loading...</Loading>}
+                            threshold={0}
+                        >
+                            {
+                                feed.map((f, index) => {
+                                    //console.log(f.comments)
+                                    const cm = f.comments.map((c) => (
+                                        <Comments>
+                                            <ProfileImage userProfileImage={c.writer_avatar} width="50px" height="50px" />
+                                            <ComName>
+                                                <p>Nome do cara {c.is_following && <span>• following</span>}</p>
+                                                <h1>{c.text}</h1>
+                                            </ComName>
+                                        </Comments>
+                                    ))
+                                    return (
+                                        <BigContainer key={f.post_id} data-test="post">
+                                            <PostContainer key={f.post_id} data-test="post">
+                                                <SideContainer>
+                                                    <ImageLikeContainer>
+                                                        <ProfileImage userProfileImage={f.avatar} width="50px" height="50px" />
+                                                        <img onClick={() => handleLike(f.post_id)} src={f.isLiked ? filledHeart : heart} alt="heart" data-test="like-btn" />
+                                                        <p onMouseEnter={() => handleLikeHover(f.post_id)} onMouseOut={() => handleLikeHoverLeaving(f.post_id)} data-test="counter" >{f.likes} Likes</p>
+                                                        {likesInfo && f.likesInfo?.length > 0 && (<div data-test="tooltip">
+                                                            <div></div>
+                                                            <p>{f.likesInfo}</p>
+                                                        </div>)}
+                                                    </ImageLikeContainer>
+                                                    <DialogBox onClick={() => toggleComment(index, f.post_id)}>
+                                                        <img src={dialogBox} alt="Dialog Box"></img>
+                                                        <p>{f.comments.length} comments</p>
+                                                    </DialogBox>
+                                                </SideContainer>
+                                                <PostInfo>
+                                                    <TopLine>
+                                                        <Link to={`/user/${f.post_owner}`}>
+                                                            <Username data-test="username" >{f.name}</Username>
+                                                        </Link>
+                                                        {(f.post_owner === Number(userId)) && <ButtonBox>
+                                                            <button onClick={() => toggleEditing(index, f.description, f.post_id)} data-test="edit-btn">
+                                                                <img src={pencil} alt="Edit" />
+                                                            </button>
+                                                            <button onClick={() => handleModal(f.post_id)} data-test="delete-btn" >
+                                                                <img src={trashCan} alt="Delete" />
+                                                            </button>
+                                                        </ButtonBox>}
+                                                        <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} setOpenModal post_id={f.post_id} token={userToken} > </Modal>
+                                                    </TopLine>
+                                                    {(isEditing && Number(index) === Number(postIndex)) ?
+                                                        <EditForm onSubmit={handleEditPost}>
+                                                            <input
+                                                                ref={refs.current[index]}
+                                                                value={editDescription}
+                                                                onChange={(e) => setEditDescription(e.target.value)}
+                                                                onKeyDown={(e) => handleExit(e.key)}
+                                                                disabled={disabled}
+                                                            />
+                                                        </EditForm> :
+                                                        <PostDescription data-test="description" >
+
+                                                            {reactStringReplace(f.description, /#(\w+)/g, (match, i) => (
+                                                                <Link to={`/hashtag/${match}`} key={match + i} >#{match}</Link>
+                                                            ))}
+                                                        </PostDescription>}
+
+
+                                                    <Metadata href={f.shared_link} target="_blank" data-test="link">
+                                                        <LinkInfo>
+                                                            <LinkTitle>{f.link_title}</LinkTitle>
+                                                            <LinkDescription>{f.link_description}</LinkDescription>
+                                                            <LinkURL>{f.shared_link}</LinkURL>
+                                                        </LinkInfo>
+                                                        <LinkImage src={f.link_image}></LinkImage>
+                                                    </Metadata>
+                                                </PostInfo>
+                                            </PostContainer>
+                                            {Number(index) === Number(postIndex) && openComment &&
+                                                <ComentsBox>
+                                                    {cm}
+                                                    <CommentForm onSubmit={handleComment}>
+                                                        <ProfileImage userProfileImage={userProfileImage} width="50px" height="50px" />
+                                                        <input
+                                                            placeholder="write a comment..."
+                                                            value={commentText}
+                                                            onChange={(e) => setCommentText(e.target.value)}
+                                                            disabled={disabled}
+                                                        />
+                                                        <button onClick={handleComment}>
+                                                            <img src={papperPlane} alt="Send Icon" />
+                                                        </button>
+                                                    </CommentForm>
+                                                </ComentsBox>}
+                                        </BigContainer>
+                                    )
+                                })}
+                        </InfiniteScroll>
                 }
+
             </FeedContainer>
             <TrendingsContainer data-test="trending" >
                 <TrendTitle>
@@ -398,7 +518,7 @@ export default function TimelinePage() {
                     )}
             </TrendingsContainer>
             <Modal isOpen={openModal} closeModal={() => setOpenModal(!openModal)} post_id={selectedPost} token={userToken} > </Modal>
-        </TimelinePageContainer>
+        </TimelinePageContainer >
     )
 }
 
@@ -415,6 +535,13 @@ const NewPosts = styled.button`
     }
 `
 
+const Loading = styled.div`
+  //font-family: "Oswald", sans-serif;
+  font-size: 28px;
+  text-align: center;
+  margin: 15px auto;
+  color: #FFFFFF;
+`
 
 const ImageLikeContainer = styled.div`
 display:flex;
@@ -514,6 +641,7 @@ const FeedContainer = styled.div`
     align-items: center;
     max-width: 611px;
     margin-top: 72px;
+    overflow: auto;
     @media (max-width: 611px) {
         min-width: 100%;
         gap: 25px;
