@@ -38,11 +38,15 @@ function getPostsLikesInfo(token, post_id) {
     return axios.get(`${BASE_URL}/likes/${post_id}`, { headers: { Authorization: token } })
 }
 
-function postComment(token,body,post_id){
+function postComment(token, body, post_id) {
     return axios.post(`${BASE_URL}/comment/${post_id}`, body, { headers: { Authorization: token } })
 }
 
+function sharePost(token, body) {
+    return axios.post(`${BASE_URL}/repost`, body, { headers: { Authorization: token } });
+}
 
-const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID, getPostsByHashtag, postEdit, getLikes, toggleLike, getPostsLikesInfo, postComment};
+
+const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID, getPostsByHashtag, postEdit, getLikes, toggleLike, getPostsLikesInfo, postComment, sharePost };
 
 export default apiPosts;
