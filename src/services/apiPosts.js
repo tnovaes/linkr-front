@@ -38,7 +38,11 @@ function getPostsLikesInfo(token, post_id) {
     return axios.get(`${BASE_URL}/likes/${post_id}`, { headers: { Authorization: token } })
 }
 
+function postComment(token,body,post_id){
+    return axios.post(`${BASE_URL}/comment/${post_id}`, body, { headers: { Authorization: token } })
+}
 
-const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID, getPostsByHashtag, postEdit, getLikes, toggleLike, getPostsLikesInfo };
+
+const apiPosts = { getTimeline, publishPost, getPostsByUserID, deletePostByID, getPostsByHashtag, postEdit, getLikes, toggleLike, getPostsLikesInfo, postComment};
 
 export default apiPosts;
