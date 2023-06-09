@@ -10,6 +10,7 @@ import papperPlane from "../assets/papperPlane.svg"
 import filledHeart from "../assets/filled-heart.png";
 import dialogBox from "../assets/dialogBox.svg"
 import pencil from "../assets/pencil.svg";
+import repostButton from "../assets/repostButton.svg"
 import Modal from "../components/Modal.js";
 import reactStringReplace from 'react-string-replace';
 import useInterval from "use-interval";
@@ -149,6 +150,7 @@ export default function TimelinePage() {
                 setDisabled(false);
             });
     }
+
     async function handleLikeHover(post_id) {
         const token = localStorage.getItem("token")
         let newFeed = [...feed]
@@ -208,6 +210,7 @@ export default function TimelinePage() {
         setFeed(prev => [...oldFeed])
         setLikesInfo(false)
     }
+
     function handlePost(e) {
         e.preventDefault();
         setDisabled(true);
@@ -233,6 +236,7 @@ export default function TimelinePage() {
         setSelectedPost(postId)
         setOpenModal(true)
     }
+
     async function handleLike(post_id) {
         try {
             const token = localStorage.getItem('token')
@@ -252,6 +256,18 @@ export default function TimelinePage() {
 
     function showNewPosts() {
         window.location.reload(true);
+    }
+
+    function handleRepost(post_id) {
+        const token = localStorage.getItem("token");
+        apiPosts.sharePost(token, post_id)
+        .then(res => {
+            setReload(!reload);
+        })
+        .catch(err => {
+            alert("There was an error sharing this post")
+            console.log(err.response.data);
+        });
     }
 
     return (
@@ -321,6 +337,10 @@ export default function TimelinePage() {
                                                 <img src={dialogBox} alt="Dialog Box"></img>
                                                 <p>{f.comments.length} comments</p>
                                             </DialogBox>
+                                            <RepostBox onClick={() => handleRepost(f.post_id)}>
+                                                <img src={repostButton} alt="Repost Button"></img>
+                                                <p>{f.repost_count} re-post</p>
+                                            </RepostBox>
                                         </SideContainer>
                                         <PostInfo>
                                             <TopLine>
@@ -498,6 +518,7 @@ const DialogBox = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    margin-top:15px;
 
     p{
         font-family: 'Lato';
@@ -507,6 +528,23 @@ const DialogBox = styled.div`
         color: #FFFFFF;
     }
 `
+
+const RepostBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top:20px;
+
+    p{
+        font-family: 'Lato';
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 13px;
+        color: #FFFFFF;
+    }
+`
+
 
 const FeedContainer = styled.div`
     display: flex;
